@@ -1,0 +1,134 @@
+#!/usr/bin/env node
+var rp       = require('request-promise');
+var inquirer = require('inquirer');
+var program  = require('commander').parse(process.argv);
+var chalk    = require('chalk');
+
+var hall = program.args.join(' ');
+
+var hall_id = {
+  '104' : '104west',
+  'libe' : 'amit_bhatia_libe_cafe',
+  'atrium' : 'atrium_cafe',
+  'nasties' : 'bear_necessities',
+  'bears den' : 'bears_den',
+  'becker' : 'becker_house_dining_room',
+  'big red barn' : 'big_red_barn',
+  'jennie' : 'cafe_jennie',
+  'carols' : 'carols_cafe',
+  'cascadeli' : 'cascadeli',
+  'cook' : 'cook_house_dining_room',
+  'dairy bar' : 'cornell_dairy_bar',
+  'goldies' : 'goldies',
+  'green dragon' : 'green_dragon',
+  'ivy room' : 'ivy_room',
+  'bethe' : 'jansens_dining_room_bethe_house',
+  'jansens market' : 'jansens_market',
+  'keeton' : 'keeton_house_dining_room',
+  'marthas' : 'marthas_cafe',
+  'mattins' : 'mattins_cafe',
+  'appel' : 'north_star',
+  'okies' : 'okenshields',
+  'okenshields' : 'okenshields',
+  'risley' : 'risley_dining',
+  'rpcc' : 'robert_purcell_marketplace_eatery',
+  'rose' : 'rose_house_dining_room',
+  'rustys' : 'rustys',
+  'synapsis' : 'synapsis_cafe',
+  'trillium' : 'trillium'
+};
+
+var halls = [
+  '104',
+  'libe',
+  'atrium',
+  'nasties',
+  'bears den',
+  'becker',
+  'big red barn',
+  'jennie',
+  'carols',
+  'cascadeli',
+  'cook',
+  'dairy bar',
+  'goldies',
+  'green dragon',
+  'ivy room',
+  'bethe',
+  'jansens market',
+  'keeton',
+  'marthas',
+  'mattins',
+  'appel',
+  'okies',
+  'risley',
+  'rpcc',
+  'rose',
+  'rustys',
+  'synapsis',
+  'trillium'];
+
+// By default, commander splits the arguments. Let's join them.
+if (hall) {
+  show_menu(hall);
+  return;
+}
+
+inquirer.prompt([
+  { type: "list",
+    message: "What hall?",
+    paginated : true,
+    name: "hall",
+    choices: halls
+  }
+], function( answers ) {
+  show_menu(answers.hall);
+});
+
+
+function show_menu (hall) {
+  var menu_req = 'http://redapi-tious.rhcloud.com/dining/menu/' +
+                  hall_id[hall] + '/ALL/LOCATIONS';
+  var time_req = 'http://redapi-tious.rhcloud.com/dining/event/' + 
+                  hall_id[hall] + '/April%206,%202015-April%2021,%202015/';
+  rp(menu_req)
+  .then(function (body) {
+    var data = JSON.parse(body)[hall_id[hall]];
+    console.log();
+    Object.keys(data).forEach(function (meal) {
+      if (data[meal] === null) return;
+
+      console.log(chalk.green.underline(meal) + ':');
+      data[meal].forEach(function (menu_item) {
+        var extra = menu_item.healthy ? " 🍎" : ""; 
+        console.log(" " + menu_item.name + extra);
+      });
+      console.log();
+    });
+  })
+  .then(function () {
+    return rp(time_req);
+  })
+  .then(function (body) {
+    var data = JSON.parse(body)[hall_id[hall]];
+
+    data = data.filter(function (event) {
+      start = (new Date(event.start)).getTime();
+      end   = (new Date(event.end)).getTime();
+      now   = (new Date()).getTime();
+      return (start < now) && (now < end);
+    });
+
+    if (data.length > 1) {console.log('what now'); return; }
+    if (data.length < 1) {console.log(chalk.red.underline('⛔️  Closed! Somewhere else maybe? 💃 💃 💃 ')); return; }
+
+
+    console.log(data[0].summary)
+
+  });
+
+}
+
+
+
+

@@ -1,0 +1,33 @@
+{
+  "name": "cornell",
+  "version": "0.0.0",
+  "description": "CLI for Cornell University",
+  "bin": {
+    "cornell": "./bin/cornell"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrkev/cornell.git"
+  },
+  "keywords": [
+    "cornell",
+    "big",
+    "red",
+    "cli"
+  ],
+  "author": "Kevin Chavez <keh222@cornell.edu> (http://thatkevin.tk)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mrkev/cornell/issues"
+  },
+  "homepage": "https://github.com/mrkev/cornell",
+  "dependencies": {
+    "chalk": "^1.0.0",
+    "commander": "^2.8.0",
+    "inquirer": "^0.8.2",
+    "request-promise": "^0.4.2"
+  }
+}

@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+
+var program = require('commander');
+
+program
+  // .command('class [search]', 'search for class info')
+  .command('eat [hall]', 'display menus for hall');
+  // .command('hours [hall]', 'show hours for dining hall')
+  // .command('print [printer] [document]', 'show hours for dining hall')
+  // .command('list [thing]', 'list printers | open-hall');
+
+program.parse(process.argv);
+
+if (!process.argv.slice(2).length) {
+    program.help();
+}
