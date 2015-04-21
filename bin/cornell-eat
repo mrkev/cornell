@@ -3,6 +3,7 @@ var rp       = require('request-promise');
 var inquirer = require('inquirer');
 var program  = require('commander').parse(process.argv);
 var chalk    = require('chalk');
+               require('sugar');
 
 var hall = program.args.join(' ');
 
@@ -72,10 +73,16 @@ inquirer.prompt([
 
 
 function show_menu (hall) {
+  var today    = (new Date()).toDateString().replace(/ /g, '%20');
+  var tomorrow =  new Date(); 
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow = tomorrow.toDateString().replace(/ /g, '%20');
+
   var menu_req = 'http://redapi-tious.rhcloud.com/dining/menu/' +
                   hall_id[hall] + '/ALL/LOCATIONS';
   var time_req = 'http://redapi-tious.rhcloud.com/dining/event/' +
-                  hall_id[hall] + '/April%206,%202015-April%2021,%202015/';
+                  hall_id[hall] + '/' + today + '-' + tomorrow;
+  
   rp(menu_req)
   .then(function (body) {
     var data = JSON.parse(body)[hall_id[hall]];
@@ -97,16 +104,37 @@ function show_menu (hall) {
   .then(function (body) {
     var data = JSON.parse(body)[hall_id[hall]];
 
-    data = data.filter(function (event) {
+    var atm = data.filter(function (event) {
       start = (new Date(event.start)).getTime();
       end   = (new Date(event.end)).getTime();
       now   = (new Date()).getTime();
       return (start < now) && (now < end);
     });
 
-    if (data.length  >  1) console.log('what now');
-    if (data.length  <  1) console.log('⛔️  ' + chalk.red.underline('Closed! Somewhere else maybe?') + ' 💃 💃 💃 ');
-    if (data.length === 1) console.log(data[0].summary);
+    var nxt = data.filter(function (event) {
+      start = (new Date(event.start)).getTime();
+      end   = (new Date(event.end)).getTime();
+      now   = (new Date()).getTime();
+      return (now < start) && (now < end);
+    })
+    .sort(function (a, b) {
+      a = (new Date(a.start)).getTime();
+      b = (new Date(b.start)).getTime();
+      return (a < b) ? -1 : 1;
+    });
+
+    if (atm.length  >  1) console.log('what now');
+    if (atm.length === 1) console.log(atm[0].summary);
+    if (atm.length  <  1) {
+      console.log('⛔️  ' + chalk.red.underline('Closed! Somewhere else maybe?') + ' 💃 💃 💃 ');
+
+      var next = (new Date(nxt[0].start));
+      var next_open = next.format('{weekday} {Month} {dd} ');
+      if ((new Date(nxt[0].start)).isTomorrow()) next_open = 'tomorrow ';
+      if ((new Date(nxt[0].start)).isToday()) next_open = '';
+      if (nxt.length > 0) console.log('   Opens:', next_open + next.format('{12hr}:{mm}{tt}'));
+    }
+
     
     return console.log();
   });

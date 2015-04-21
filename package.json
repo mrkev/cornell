@@ -29,6 +29,7 @@
     "commander": "^2.8.0",
     "inquirer": "^0.8.2",
     "request-promise": "^0.4.2",
+    "sugar": "^1.4.1",
     "word-wrap": "^1.0.3"
   }
 }
