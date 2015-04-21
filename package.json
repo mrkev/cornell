@@ -28,6 +28,7 @@
     "chalk": "^1.0.0",
     "commander": "^2.8.0",
     "inquirer": "^0.8.2",
-    "request-promise": "^0.4.2"
+    "request-promise": "^0.4.2",
+    "word-wrap": "^1.0.3"
   }
 }

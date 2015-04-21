@@ -40,36 +40,21 @@ var hall_id = {
 
 var halls = [
   '104',
-  'libe',
-  'atrium',
   'nasties',
-  'bears den',
   'becker',
-  'big red barn',
-  'jennie',
-  'carols',
-  'cascadeli',
   'cook',
-  'dairy bar',
-  'goldies',
-  'green dragon',
-  'ivy room',
   'bethe',
-  'jansens market',
   'keeton',
-  'marthas',
-  'mattins',
   'appel',
   'okies',
   'risley',
   'rpcc',
-  'rose',
-  'rustys',
-  'synapsis',
-  'trillium'];
+  'rose'
+];
 
 // By default, commander splits the arguments. Let's join them.
 if (hall) {
+  if(!hall_id[hall]) return;
   show_menu(hall);
   return;
 }
@@ -89,7 +74,7 @@ inquirer.prompt([
 function show_menu (hall) {
   var menu_req = 'http://redapi-tious.rhcloud.com/dining/menu/' +
                   hall_id[hall] + '/ALL/LOCATIONS';
-  var time_req = 'http://redapi-tious.rhcloud.com/dining/event/' + 
+  var time_req = 'http://redapi-tious.rhcloud.com/dining/event/' +
                   hall_id[hall] + '/April%206,%202015-April%2021,%202015/';
   rp(menu_req)
   .then(function (body) {
@@ -119,12 +104,11 @@ function show_menu (hall) {
       return (start < now) && (now < end);
     });
 
-    if (data.length > 1) {console.log('what now'); return; }
-    if (data.length < 1) {console.log(chalk.red.underline('⛔️  Closed! Somewhere else maybe? 💃 💃 💃 ')); return; }
-
-
-    console.log(data[0].summary)
-
+    if (data.length  >  1) console.log('what now');
+    if (data.length  <  1) console.log('⛔️  ' + chalk.red.underline('Closed! Somewhere else maybe?') + ' 💃 💃 💃 ');
+    if (data.length === 1) console.log(data[0].summary);
+    
+    return console.log();
   });
 
 }

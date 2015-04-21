@@ -1,0 +1,169 @@
+#!/usr/bin/env node
+
+'use strict';
+/* global require, Promise, process */ 
+var rp = require('request-promise');
+var inquirer = require('inquirer');
+var program = require('commander');
+var chalk = require('chalk');
+var wrap = require('word-wrap');
+
+program
+  .option('-s, --subject [subject]', 'Limit search to subject')
+  .option('-l, --list [format]', 'Add the specified type of cheese [%s]', '%s')
+  .parse(process.argv);
+
+program.parse(process.argv);
+
+var search = program.args.join(' ');
+
+if (search) {
+  search = '&q=' + search;
+}
+
+var rosters = 
+  rp('https://classes.cornell.edu/api/2.0/config/rosters.json')
+  .then(function (body) {
+    // TODO Error handling.
+    return JSON.parse(body).data.rosters.map(function (rost) {
+      return {
+        slug : rost.slug,
+        descr : rost.descr
+      };
+    });
+  });
+
+var subjects = 
+  rp('https://classes.cornell.edu/api/2.0/config/subjects.json?roster=FA14')
+  .then(function (body) {
+    // TODO Error handling.
+    return JSON.parse(body).data.subjects.map(function (subj) {
+      return {
+        slug : subj.value,
+        descr : subj.descr
+      };
+    });
+  });
+
+Promise.all([rosters, subjects]).then(function (res) {
+  var rosters  = res[0];
+  var subjects = res[1];
+
+  if (program.subject) {
+    subjects = [{slug : program.subject}];
+    console.log('Searching', program.subject, '\n');
+  } else {
+    console.log('Searching', subjects.length, 'subjects', '\n');
+  }
+
+  var requests = subjects.map(function (subj) {
+    return rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=FA14&subject=' + subj.slug + search);
+  });
+
+  Promise.all(requests)
+    .then(function (bodies) {
+      return bodies.map(function (body) {
+        return JSON.parse(body).data.classes;
+      })
+      .filter(function (classes) {
+        return classes.length > 0;
+      })
+      .reduce(function (acc, clss) {
+        return acc.concat(clss);
+      });
+    })
+    .then(function (classes) {
+      return display_classlist(classes);
+    });
+});
+
+
+
+function display_classlist (classes) {
+
+  if (classes.length === 0) {
+    console.log('No classes!');
+    return;
+  }
+
+  var display_list = classes.reduce(function (acc, clss) {
+    acc[clss.subject + ' ' + clss.catalogNbr + ': ' + clss.titleShort]
+      = clss;
+    return acc;
+  }, {});
+
+  inquirer.prompt([
+    { type: "list",
+      paginated : true,
+      message: "Info for:",
+      name: "clss",
+      choices: Object.keys(display_list)
+    }
+  ], function(answers) {
+    display_classinfo(display_list[answers.clss]);
+  });
+}
+
+
+function display_classinfo (clss) {
+
+  var acgr = clss.acadGroup, 
+      accr = clss.acadCareer, 
+      brth = clss.catalogBreadth, 
+      dist = clss.catalogDistr,
+      when = clss.catalogWhenOffered,
+      fee  = clss.catalogFee;
+
+  if (acgr || accr || brth || dist || when || fee)
+    console.log('   ',
+                chalk.black(acgr, accr),
+                chalk.red(brth, dist),
+                when, chalk.green(fee), '\n');
+  
+  var reqs = clss.catalogPrereqCoreq,
+      fovr = clss.catalogForbiddenOverlaps,
+      prms = clss.catalogPermission;
+
+  if (fovr)
+    console.log(wrap('⛔️  ' + fovr, {width: 70}), '\n');
+
+  if (reqs)
+    console.log(wrap('📶  ' + reqs, {width: 70}), '\n');
+  
+  if (prms)
+    console.log(wrap('🔓  ' + prms, {width: 70}), '\n');
+
+
+  var dscr = clss.description;
+
+  if (dscr)
+    console.log(wrap(dscr, {width: 70}), '\n');
+
+  var cmts = clss.catalogComments;
+
+  if (cmts)
+    console.log(wrap(cmts, {width: 70}), '\n');
+}
+
+
+var acad_groups = {
+  'EN' : 'Engeneering.',
+  'AS' : 'Arts & Sciences.',
+  'HE' : 'Human Ecology.',
+  'HA' : 'Hotel Administration.',
+  'AR' : 'Arch. Art & Planning.',
+  'AG' : 'Ag. & Life Sciences.',
+  'IL' : 'Ind. & Labour Rel.',
+};
+
+var acad_groups = {
+  'EN' : 'Engeneering.',
+  'AS' : 'Arts & Sciences.',
+  'HE' : 'Human Ecology.',
+  'HA' : 'Hotel Administration.',
+  'AR' : 'Arch. Art & Planning.',
+  'AG' : 'Ag. & Life Sciences.',
+  'IL' : 'Ind. & Labour Rel.',
+  'AT' : 'Athletics.',
+};
+
