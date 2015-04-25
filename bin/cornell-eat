@@ -128,6 +128,7 @@ function show_menu (hall) {
     if (atm.length  <  1) {
       console.log('⛔️  ' + chalk.red.underline('Closed! Somewhere else maybe?') + ' 💃 💃 💃 ');
 
+      if (!nxt[0]) return console.log();
       var next = (new Date(nxt[0].start));
       var next_open = next.format('{weekday} {Month} {dd} ');
       if ((new Date(nxt[0].start)).isTomorrow()) next_open = 'tomorrow ';
