@@ -2,6 +2,9 @@
 
 So it's like Cornell info on your Terminal. 
 
+# NOTE: THE STUFF HERE DOESNT WORK YET. THIS README IS A WORK IN PROGRESS.
+
+
 ## Install
 
 If you have node: `npm install -g cornell`
