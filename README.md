@@ -4,28 +4,36 @@ So it's like Cornell info on your Terminal.
 
 ## Install
 
-If you have node: `npm install -g cornell`
+Cornell hasn't been published to npm yet so the only way to get it is by `npm link` -ing it from source. 
 
-### I don't have node /:
+    git clone http://github.com/mrkev/cornell
+    cd cornell
+    npm link
 
-If you don't have node installed, you can use the install script using cURL:
+#### NOTE: EVERYTHING BELLOW DOESN'T WORK YET. WILL WORK BY TIME OF PUBLISHING
 
-    curl https://raw.githubusercontent.com/creationix/nvm/v0.24.1/install.sh | bash
+If you have node.js: 
 
-or using Wget:
+    npm install -g cornell
 
-    wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.24.1/install.sh | bash
+If you dont have node.js:
 
-This will
+    curl https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh | bash
 
-1. Set up nvm
-2. Install the latest iojs
-3. Install cornell
+If the you don't have node and the above failed or the idea of piping curl to bash freaks you out:
 
-You can also do all of the above manually if you don't trust scripts. Or look at [the source](https://raw.githubusercontent.com/creationix/nvm/v0.24.1/install.sh) and follow along.
+1. Install node.js or io.js (you sholud give nvm a shot).
+2. Install `npm install -g cornell`.
 
 ## Usage
 
-`cornell eats [hall]`
+ - `cornell --help`
+ - `cornell eat --help`
+ - `cornell class --help`
 
-`cornell class `
+### Examples 
+
+ - `cornell eat` - Let's you pick a hall, view the menu.
+ - `cornell eat okies` - Okenshields' menu.
+ - `cornell class mexico` - Search roster for classes containing "mexico".
+ - `cornell class -s CS compilers` - Search CS classes containing compilers.
