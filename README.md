@@ -25,13 +25,7 @@ If the you don't have node and the above failed or the idea of piping curl to ba
 1. Install node.js or io.js (you sholud give nvm a shot).
 2. Install `npm install -g cornell`.
 
-## Usage
-
- - `cornell --help`
- - `cornell eat --help`
- - `cornell class --help`
-
-### Examples 
+## Usage 
 
  - `cornell eat` - Let's you pick a hall, view the menu.
  - `cornell eat okies` - Okenshields' menu.
