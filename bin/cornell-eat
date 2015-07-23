@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+'use strict';
+/* global console, require */
 var rp       = require('request-promise');
 var inquirer = require('inquirer');
 var program  = require('commander').parse(process.argv);
@@ -11,7 +13,7 @@ var hall_id = {
   '104' : '104west',
   'libe' : 'amit_bhatia_libe_cafe',
   'atrium' : 'atrium_cafe',
-  'nasties' : 'bear_necessities',
+  // 'nasties' : 'bear_necessities',
   'bears den' : 'bears_den',
   'becker' : 'becker_house_dining_room',
   'big red barn' : 'big_red_barn',
@@ -41,7 +43,7 @@ var hall_id = {
 
 var halls = [
   '104',
-  'nasties',
+  // 'nasties',
   'becker',
   'cook',
   'bethe',
@@ -60,18 +62,23 @@ if (hall) {
   return;
 }
 
+// Ask which hall with a nice menu.
 inquirer.prompt([
-  { type: "list",
-    message: "What hall?",
+  { type: 'list',
+    message: 'What hall?',
     paginated : true,
-    name: "hall",
+    name: 'hall',
     choices: halls
   }
 ], function( answers ) {
   show_menu(answers.hall);
 });
 
-
+/**
+ * Fetches and displays manu information.
+ * @param  {String} hall Hall to display the menu for. Must be a key 
+ *                       for hall_id.
+ */
 function show_menu (hall) {
   var today    = (new Date()).toDateString().replace(/ /g, '%20');
   var tomorrow =  new Date(); 
@@ -83,7 +90,10 @@ function show_menu (hall) {
   var time_req = 'http://redapi-tious.rhcloud.com/dining/event/' +
                   hall_id[hall] + '/' + today + '-' + tomorrow;
   
+  // Request the menu
   rp(menu_req)
+  
+  // Print the menu
   .then(function (body) {
     var data = JSON.parse(body)[hall_id[hall]];
     console.log();
@@ -92,29 +102,33 @@ function show_menu (hall) {
 
       console.log(chalk.green.underline(meal) + ':');
       data[meal].forEach(function (menu_item) {
-        var extra = menu_item.healthy ? " 🍎" : ""; 
-        console.log(" " + menu_item.name + extra);
+        var extra = menu_item.healthy ? ' 🍎' : ''; 
+        console.log(' ' + menu_item.name + extra);
       });
       console.log();
     });
   })
+
+  // Request the time open
   .then(function () {
     return rp(time_req);
   })
+
+  // Print the time open
   .then(function (body) {
     var data = JSON.parse(body)[hall_id[hall]];
 
     var atm = data.filter(function (event) {
-      start = (new Date(event.start)).getTime();
-      end   = (new Date(event.end)).getTime();
-      now   = (new Date()).getTime();
+      var start = (new Date(event.start)).getTime();
+      var end   = (new Date(event.end)).getTime();
+      var now   = (new Date()).getTime();
       return (start < now) && (now < end);
     });
 
     var nxt = data.filter(function (event) {
-      start = (new Date(event.start)).getTime();
-      end   = (new Date(event.end)).getTime();
-      now   = (new Date()).getTime();
+      var start = (new Date(event.start)).getTime();
+      var end   = (new Date(event.end)).getTime();
+      var now   = (new Date()).getTime();
       return (now < start) && (now < end);
     })
     .sort(function (a, b) {
@@ -135,7 +149,6 @@ function show_menu (hall) {
       if ((new Date(nxt[0].start)).isToday()) next_open = '';
       if (nxt.length > 0) console.log('   Opens:', next_open + next.format('{12hr}:{mm}{tt}'));
     }
-
     
     return console.log();
   });
