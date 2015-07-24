@@ -8,21 +8,87 @@ var program = require('commander');
 var chalk = require('chalk');
 var wrap = require('word-wrap');
 
+/////////////////////////////// Helper functions ///////////////////////////////
+
+/**
+ * Promsie wraper for Inquirer.
+ * @param  {Array} questions    Standard Inquirer question array
+ * @return {Promise}            Resolves to the standard answers
+ *                              object after the user answers
+ *                              the questions
+ */
+var whatnow = function (questions) {
+  return new Promise(function (res) {
+    inquirer.prompt(questions, res);
+  });
+};
+
+/**
+ * Takes a {class}, replaces format tokens with values.
+ * @param  {Class}  clss    Standard Roster API class object
+ * @param  {Object} format  Dictionary of {token: 'key'}
+ * @return void
+ */
+function display_class_with_format (clss, format) {
+  for (var key in formats) {
+    format = format.replace(key, clss[formats[key]]);
+  }
+  console.log(format);
+}
+
+function pretty (obj, symb, pre, post) {
+  if (!symb) symb = ':';
+  if (!pre) pre = '';
+  if (!post) post = '';
+  var res = '';
+  for (var key in obj) {
+    res += pre + ' ' + key + ' ' + symb + ' ' + obj[key] + ' ' + post + '\n';
+  }
+  return res;
+}
+
+///////////////////////////////// Definitions. /////////////////////////////////
+
+var formats = {
+  '%id'         : 'crseId',
+  '%subj'       : 'subject',
+  '%cnum'       : 'catalogNbr',
+  '%title'      : 'titleShort',
+  '%ltitle'     : 'titleLong',
+  '%desc'       : 'description',
+  '%breath'     : 'catalogBreadth',
+  '%dist'       : 'catalogDistr',
+  '%!over'      : 'catalogForbiddenOverlaps',
+  '%when'       : 'catalogWhenOffered',
+  '%reqs'       : 'catalogPrereqCoreq',
+  '%fee'        : 'catalogFee',
+  '%satisfies'  : 'catalogSatisfiesReq',
+  '%perm'       : 'catalogPermission',
+  '%subfield'   : 'catalogCourseSubfield',
+  '%outcomes'   : 'catalogOutcomes',
+  '%acareer'    : 'acadCareer',
+  '%agroup'     : 'acadGroup'
+};
+
+//////////////////////////////// The real deal. ////////////////////////////////
+
 program
   .usage('[search query]')
   .option('-s, --subject [subject]', 'Limit search to subject')
   .option('-l, --list [format]', 'Print with format [%s]')
+  .on('--help', function(){
+    console.log('  Using --list:');
+    console.log('');
+    console.log('    $ cornell class -s CS -l "%subj%cnum %when" | grep spring');
+    console.log('');
+    console.log('    Tokens:');
+    console.log(pretty(formats, '->', '      '));
+  })
   .parse(process.argv);
 
+
 var search = program.args.join(' ');
-
-if (search) {
-  search = '&q=' + search;
-} else {
-  // Or search everything?
-  return;
-}
-
+if (search) { search = '&q=' + search; }
 
 var rosters = 
   rp('https://classes.cornell.edu/api/2.0/config/rosters.json')
@@ -30,7 +96,7 @@ var rosters =
     // TODO Error handling.
     return JSON.parse(body).data.rosters.map(function (rost) {
       return {
-        slug : rost.slug,
+        slug  : rost.slug,
         descr : rost.descr
       };
     });
@@ -53,13 +119,40 @@ Promise.all([rosters, subjects]).then(function (res) {
   var rosters  = res[0];
   var subjects = res[1];
 
-  if (program.subject) {
-    subjects = [{slug : program.subject}];
+  // No search term or subject. The hell does 
+  // this user want? Offer a menu. 👌
+  if (!search && !program.subject) {
+    return whatnow([
+      { type: 'list',
+        message: 'What subject?',
+        paginated : true,
+        name: 'subject',
+        choices: subjects.map(function (x) {return x.slug + ' ' + x.descr;})
+      }
+    ]).then(function (answers) {
+      var sub_slug = answers.subject.split(' ')[0];
+      return [{slug : sub_slug}];
+    });
+  } 
+
+  // We got a search term, and a subject. Yay! lol/
+  else if (search && program.subject) {
     console.log('Searching', program.subject, '\n');
-  } else {
-    console.log('Searching', subjects.length, 'subjects', '\n');
+    return [{slug : program.subject}];
   }
 
+  // Show entire subject.
+  else if (!search && program.subject) {
+    return [{slug : program.subject}];
+  }
+
+  // Search everything.
+  else if (search && !program.subject) {
+    console.log('Searching', subjects.length, 'subjects', '\n');
+    return subjects;
+  }
+
+}).then(function (subjects) {
   var requests = subjects.map(function (subj) {
     // console.log('https://classes.cornell.edu/api/2.0/search/classes.json?roster=FA14&subject=' + subj.slug + search);
     return rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=FA14&subject=' + subj.slug + search);
@@ -80,9 +173,11 @@ Promise.all([rosters, subjects]).then(function (res) {
     .then(function (classes) {
       return display_classlist(classes);
     });
+})
+.catch(function (err) {
+  console.log("Couldn't reach RedAPI. 😞");
+  console.error(err);
 });
-
-
 
 function display_classlist (classes) {
 
@@ -162,35 +257,6 @@ function display_classinfo (clss) {
     console.log(wrap(cmts, {width: 70}), '\n');
 }
 
-function display_class_with_format (clss, format) {
-  for (var key in formats) {
-    format = format.replace(key, clss[formats[key]]);
-  }
-
-  console.log(format);
-
-}
-
-var formats = {
-  '%id' : 'crseId',
-  '%subj' : 'subject',
-  '%cnum' : 'catalogNbr',
-  '%title' : 'titleShort',
-  '%ltitle' : 'titleLong',
-  '%desc' : 'description',
-  '%breath' : 'catalogBreadth',
-  '%dist' : 'catalogDistr',
-  '%!over' : 'catalogForbiddenOverlaps',
-  '%when' : 'catalogWhenOffered',
-  '%reqs' : 'catalogPrereqCoreq',
-  '%fee' : 'catalogFee',
-  '%satisfies' : 'catalogSatisfiesReq',
-  '%perm' : 'catalogPermission',
-  '%subfield' : 'catalogCourseSubfield',
-  '%outcomes' : 'catalogOutcomes',
-  '%acareer' : 'acadCareer',
-  '%agroup' : 'acadGroup'
-};
 
 /*
 [x'strm',
@@ -218,14 +284,12 @@ o>'enrollGroups',
   'acadGroup' ]
  */
 
-
-
-var acad_groups = {
-  'EN' : 'Engineering.',
-  'AS' : 'Arts & Sciences.',
-  'HE' : 'Human Ecology.',
-  'HA' : 'Hotel Administration.',
-  'AR' : 'Arch. Art & Planning.',
-  'AG' : 'Ag. & Life Sciences.',
-  'IL' : 'Ind. & Labour Rel.',
-};
+// var acad_groups = {
+//   'EN' : 'Engineering.',
+//   'AS' : 'Arts & Sciences.',
+//   'HE' : 'Human Ecology.',
+//   'HA' : 'Hotel Administration.',
+//   'AR' : 'Arch. Art & Planning.',
+//   'AG' : 'Ag. & Life Sciences.',
+//   'IL' : 'Ind. & Labour Rel.',
+// };

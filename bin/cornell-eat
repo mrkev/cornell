@@ -92,6 +92,11 @@ function show_menu (hall) {
   
   // Request the menu
   rp(menu_req)
+
+  .catch(function (err) {
+    console.log("Couldn't reach RedAPI. 😞");
+    process.exit();
+  })
   
   // Print the menu
   .then(function (body) {
@@ -109,9 +114,19 @@ function show_menu (hall) {
     });
   })
 
+  .catch(function (err) {
+    console.log("Couldn't the menus and stuff, srry. 😞");
+    process.exit();
+  })
+
   // Request the time open
   .then(function () {
     return rp(time_req);
+  })
+
+  .catch(function (err) {
+    console.log("Couldn't reach RedAPI. 😞");
+    process.exit();
   })
 
   // Print the time open
@@ -151,8 +166,12 @@ function show_menu (hall) {
     }
     
     return console.log();
-  });
+  })
 
+  .catch(function (err) {
+    console.log("Couldn't figure out the times, srry. 😞");
+    process.exit();
+  });
 }
 
 

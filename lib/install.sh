@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 is_executable () {
   command -v "$1" >/dev/null 2>&1
 }
@@ -53,41 +52,6 @@ if ! (is_executable npm && is_executable node); then
   # Next install cornell! If we install from package manager we don't need to
   # restart the terminal.
   echo 'Installing cornell...'                            && \
-  npm install -g yo                                       && \
+  npm install -g cornell                                  && \
   exit 1
 fi
-
-
-
-
-# if [ -z $npm_needs_sudo ]; then
-#   sudo npm install -g yo
-# else
-#   npm install -g yo
-# fi
-
-# if is_executable brew; then
-#   brew install node git
-#   npm_needs_sudo='false'
-# elif is_executable port; then
-#   port install nodejs git
-
-
-# Check if npm exists.
-# if hash npm 2>/dev/null; then
-#     npm install -g yo
-# else
-#   touch ~/.bash_profile                                   && \
-#   curl https://raw.githubusercontent.com/creationix/nvm/v0.24.1/install.sh | bash && \
-#   echo 'Installing latest iojs...'                        && \
-#   . ~/.bash_profile                                       && \
-#   nvm install iojs                                        && \
-#   nvm alias default iojs                                  && \
-#   echo 'Installing cornell...'                            && \
-#   npm install -g yo                                       && \
-#   echo ""                                                 && \
-#   echo "All done! Restart your terminal and your're set!" && \
-#   echo ""
-# fi
-
-
