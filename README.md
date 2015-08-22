@@ -14,8 +14,8 @@ If you dont have node.js:
 
 If the you don't have node and the above failed or the idea of piping curl to bash freaks you out:
 
-1. Install node.js or io.js (you sholud give nvm a shot).
-2. Install `npm install -g cornell`.
+1. Install node.js or io.js (I recommend using [nvm](https://github.com/creationix/nvm)).
+2. Run `npm install -g cornell`.
 
 If you're old-school, really bored, or masochist,
 
@@ -23,12 +23,14 @@ If you're old-school, really bored, or masochist,
     cd cornell
     npm link
 
-Else if you think `npm` thing is just a fad the kids play with these days
+Getting updates will tend to suck though.
+
+If you think `npm` is just a fad kids play with these days, and would rather go comando
 
     git clone http://github.com/mrkev/cornell
     cd cornell/bin
 
-... and idk. Add this to your `$PATH` but tbh I hope you didn't even make it this far down this README.
+... and idk. Add this to your `$PATH` I guess but tbh I hope you didn't even make it this far plz just use `npm` ty.
 
 ## Usage 
  - `cornell --help` - Always a good idea 
