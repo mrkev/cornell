@@ -5,9 +5,6 @@
   "bin": {
     "cornell": "./bin/cornell"
   },
-  "scripts": {
-    "test": "mocha"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mrkev/cornell.git"
