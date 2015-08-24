@@ -75,6 +75,7 @@ var formats = {
 program
   .usage('[search query]')
   .option('-s, --subject [subject]', 'Limit search to subject')
+  .option('-t, --term [term]', 'Specify roster term')
   .option('-l, --list [format]', 'Print with format [%s]')
   .on('--help', function(){
     console.log('  Using --list:');
@@ -86,9 +87,17 @@ program
   })
   .parse(process.argv);
 
-
+// Search term?
 var search = program.args.join(' ');
 if (search) { search = '&q=' + search; }
+
+// Roster?
+var roster = (function () {
+  if (program.term) return program.term;
+  var now = new Date();
+  var season = (now.getMonth() > 5) ? 'FA' : 'SP';
+  return season + (now.getFullYear() % 2000);
+})();
 
 var rosters = 
   rp('https://classes.cornell.edu/api/2.0/config/rosters.json')
@@ -103,7 +112,7 @@ var rosters =
   });
 
 var subjects = 
-  rp('https://classes.cornell.edu/api/2.0/config/subjects.json?roster=FA14')
+  rp('https://classes.cornell.edu/api/2.0/config/subjects.json?roster=' + roster)
   .then(function (body) {
     // TODO Error handling.
     return JSON.parse(body).data.subjects.map(function (subj) {
@@ -155,7 +164,7 @@ Promise.all([rosters, subjects]).then(function (res) {
 }).then(function (subjects) {
   var requests = subjects.map(function (subj) {
     // console.log('https://classes.cornell.edu/api/2.0/search/classes.json?roster=FA14&subject=' + subj.slug + search);
-    return rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=FA14&subject=' + subj.slug + search);
+    return rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=' + roster + '&subject=' + subj.slug + search);
   });
 
   Promise.all(requests)
@@ -175,8 +184,8 @@ Promise.all([rosters, subjects]).then(function (res) {
     });
 })
 .catch(function (err) {
-  console.log("Couldn't reach RedAPI. 😞");
-  console.error(err);
+  console.log("Roster not available. 😞");
+  console.log(err.message);
 });
 
 function display_classlist (classes) {
