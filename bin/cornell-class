@@ -7,6 +7,7 @@ var inquirer = require('inquirer');
 var program = require('commander');
 var chalk = require('chalk');
 var wrap = require('word-wrap');
+var Promise = require('es6-promise').Promise;
 
 /////////////////////////////// Helper functions ///////////////////////////////
 

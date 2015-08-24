@@ -24,6 +24,7 @@
   "dependencies": {
     "chalk": "^1.0.0",
     "commander": "^2.8.0",
+    "es6-promise": "^3.0.2",
     "inquirer": "^0.8.2",
     "request-promise": "^0.4.2",
     "sugar": "^1.4.1",
