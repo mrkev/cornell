@@ -1,4 +1,5 @@
-# Cornell CLI
+# Cornell CLI [![Dependencies](https://david-dm.org/mrkev/cornell.png)](https://david-dm.org/mrkev/cornell#info=dependencies)
+
 
 So it's like Cornell info on your Terminal. 
 
