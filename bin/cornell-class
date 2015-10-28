@@ -186,6 +186,8 @@ Promise.all([rosters, subjects]).then(function (res) {
 })
 .catch(function (err) {
   console.log("Roster not available. 😞");
+  console.log("Try running npm update -g cornell.");
+  console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
   console.log(err.message);
 });
 
@@ -228,6 +230,7 @@ function display_classlist (classes) {
 
 
 function display_classinfo (clss) {
+  console.log(clss)
 
   var acgr = clss.acadGroup, 
       accr = clss.acadCareer, 

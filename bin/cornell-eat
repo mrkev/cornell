@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 'use strict';
-/* global console, require */
+/* global console, require, process */
 var rp       = require('request-promise');
 var inquirer = require('inquirer');
 var program  = require('commander').parse(process.argv);
 var chalk    = require('chalk');
+var hdate    = require('human-date')
                require('sugar');
 
 var hall = program.args.join(' ');
@@ -41,6 +42,37 @@ var hall_id = {
   'trillium' : 'trillium'
 };
 
+var shortname = {
+   '104west' : '104',
+   'amit_bhatia_libe_cafe' : 'libe',
+   'atrium_cafe' : 'atrium',
+   'bear_necessities' : 'nasties',
+   'bears_den' : 'bears den',
+   'becker_house_dining_room' : 'becker',
+   'big_red_barn' : 'big red barn',
+   'cafe_jennie' : 'jennie',
+   'carols_cafe' : 'carols',
+   'cascadeli' : 'cascadeli',
+   'cook_house_dining_room' : 'cook',
+   'cornell_dairy_bar' : 'dairy bar',
+   'goldies' : 'goldies',
+   'green_dragon' : 'green dragon',
+   'ivy_room' : 'ivy room',
+   'jansens_dining_room_bethe_house' : 'bethe',
+   'jansens_market' : 'jansens market',
+   'keeton_house_dining_room' : 'keeton',
+   'marthas_cafe' : 'marthas',
+   'mattins_cafe' : 'mattins',
+   'north_star' : 'appel',
+   'okenshields' : 'okies',
+   'risley_dining' : 'risley',
+   'robert_purcell_marketplace_eatery' : 'rpcc',
+   'rose_house_dining_room' : 'rose',
+   'rustys' : 'rustys',
+   'synapsis_cafe' : 'synapsis',
+   'trillium' : 'trillium'
+}
+
 var halls = [
   '104',
   // 'nasties',
@@ -55,6 +87,19 @@ var halls = [
   'rose'
 ];
 
+var supported = {
+  '104west' : true,
+  'becker_house_dining_room' : true,
+  'cook_house_dining_room' : true,
+  'jansens_dining_room_bethe_house' : true,
+  'keeton_house_dining_room' : true,
+  'north_star' : true,
+  'okenshields' : true,
+  'risley_dining' : true,
+  'robert_purcell_marketplace_eatery' : true,
+  'rose_house_dining_room' : true
+}
+
 // By default, commander splits the arguments. Let's join them.
 if (hall) {
   if(!hall_id[hall]) return;
@@ -62,17 +107,57 @@ if (hall) {
   return;
 }
 
-// Ask which hall with a nice menu.
-inquirer.prompt([
-  { type: 'list',
-    message: 'What hall?',
-    paginated : true,
-    name: 'hall',
-    choices: halls
-  }
-], function( answers ) {
-  show_menu(answers.hall);
-});
+
+// Get the open status of all at once.
+rp('http://tangerine-tious.rhcloud.com/dining/location_status/')
+.then(function (body) {
+  var data = JSON.parse(body);
+  return data.locations
+  .map(function (x) {
+    if (!supported[x.id]) return null;
+    var change = new Date(x.event_changes[0].time);
+    console.log(change)
+    var message = x.status === 'open' ? 'open'
+      : "open in " + hdate.relativeTime(change).replace(" from now", '');
+    
+    // console.log(x.id)
+    var space = new Array(7 - shortname[x.id].length).join(' ');
+
+    return {
+      message: shortname[x.id] + space + " - " +  message + "",
+      id: x.id
+    }
+  })
+  .filter(function(x) { 
+    return !!x;
+  });
+})
+
+.then(function (queries) {
+  // Ask which hall with a nice menu.
+  inquirer.prompt([
+    { type: 'list',
+      message: 'What hall?',
+      paginated : true,
+      name: 'hall',
+      choices: queries.map(function (x) { return x.message; })
+    }
+  ], function (answers) {
+    show_menu(answers.hall.split('-')[0].trim());
+  });
+
+})
+
+.catch(function (err) {
+  console.log('Ah! An error fetching the status of locations 😞');
+  console.log("Try running npm update -g cornell.");
+  console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
+  console.log(err.message);
+  process.exit();
+})
+
+
+
 
 /**
  * Fetches and displays manu information.
@@ -94,7 +179,10 @@ function show_menu (hall) {
   rp(menu_req)
 
   .catch(function (err) {
-    console.log("Couldn't reach RedAPI. 😞");
+    console.log('Couldn\'t reach RedAPI. 😞');
+    console.log("Try running npm update -g cornell.");
+    console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
+    console.log(err.message);
     process.exit();
   })
   
@@ -115,7 +203,8 @@ function show_menu (hall) {
   })
 
   .catch(function (err) {
-    console.log("Couldn't the menus and stuff, srry. 😞");
+    console.log('Couldn\'t the menus and stuff, srry. 😞');
+    console.log(err.message);
     process.exit();
   })
 
@@ -125,7 +214,10 @@ function show_menu (hall) {
   })
 
   .catch(function (err) {
-    console.log("Couldn't reach RedAPI. 😞");
+    console.log('Couldn\'t reach RedAPI. 😞');
+    console.log("Try running npm update -g cornell.");
+    console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
+    console.log(err.message);
     process.exit();
   })
 
@@ -169,7 +261,10 @@ function show_menu (hall) {
   })
 
   .catch(function (err) {
-    console.log("Couldn't figure out the times, srry. 😞");
+    console.log('Couldn\'t figure out the times, srry. 😞');
+    console.log("Try running npm update -g cornell.");
+    console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
+    console.log(err.message);
     process.exit();
   });
 }
