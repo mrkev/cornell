@@ -1,274 +1,398 @@
 #!/usr/bin/env node
 'use strict';
-/* global console, require, process */
-var rp       = require('request-promise');
-var inquirer = require('inquirer');
-var program  = require('commander').parse(process.argv);
-var chalk    = require('chalk');
-var hdate    = require('human-date')
-               require('sugar');
 
-var hall = program.args.join(' ');
+var rp         = require('request-promise');
+var inquirer   = require('inquirer');
+var program    = require('commander');
+var lib        = require('../lib/common');
+var hallname   = require('../lib/translations').hallname;
+                 require('sugar');
 
-var hall_id = {
-  '104' : '104west',
-  'libe' : 'amit_bhatia_libe_cafe',
-  'atrium' : 'atrium_cafe',
-  // 'nasties' : 'bear_necessities',
-  'bears den' : 'bears_den',
-  'becker' : 'becker_house_dining_room',
-  'big red barn' : 'big_red_barn',
-  'jennie' : 'cafe_jennie',
-  'carols' : 'carols_cafe',
-  'cascadeli' : 'cascadeli',
-  'cook' : 'cook_house_dining_room',
-  'dairy bar' : 'cornell_dairy_bar',
-  'goldies' : 'goldies',
-  'green dragon' : 'green_dragon',
-  'ivy room' : 'ivy_room',
-  'bethe' : 'jansens_dining_room_bethe_house',
-  'jansens market' : 'jansens_market',
-  'keeton' : 'keeton_house_dining_room',
-  'marthas' : 'marthas_cafe',
-  'mattins' : 'mattins_cafe',
-  'appel' : 'north_star',
-  'okies' : 'okenshields',
-  'okenshields' : 'okenshields',
-  'risley' : 'risley_dining',
-  'rpcc' : 'robert_purcell_marketplace_eatery',
-  'rose' : 'rose_house_dining_room',
-  'rustys' : 'rustys',
-  'synapsis' : 'synapsis_cafe',
-  'trillium' : 'trillium'
+/****************************** HELPERS & EXTRAS ******************************/
+
+function datestr (date) {
+  var local = new Date(date);
+  local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return local.toJSON().slice(0, 10);
+}
+
+/**
+ * Promise-ful wrapper around inquirer.js
+ * @param  {Options} opts See inquirer docs
+ * @return {Promise}      To inquirer answers
+ */
+var inquire = function (opts) {
+  return new Promise(function (res) {
+    inquirer.prompt(opts, function (answers) {
+      res(answers);
+    });  
+  });
 };
 
-var shortname = {
-   '104west' : '104',
-   'amit_bhatia_libe_cafe' : 'libe',
-   'atrium_cafe' : 'atrium',
-   'bear_necessities' : 'nasties',
-   'bears_den' : 'bears den',
-   'becker_house_dining_room' : 'becker',
-   'big_red_barn' : 'big red barn',
-   'cafe_jennie' : 'jennie',
-   'carols_cafe' : 'carols',
-   'cascadeli' : 'cascadeli',
-   'cook_house_dining_room' : 'cook',
-   'cornell_dairy_bar' : 'dairy bar',
-   'goldies' : 'goldies',
-   'green_dragon' : 'green dragon',
-   'ivy_room' : 'ivy room',
-   'jansens_dining_room_bethe_house' : 'bethe',
-   'jansens_market' : 'jansens market',
-   'keeton_house_dining_room' : 'keeton',
-   'marthas_cafe' : 'marthas',
-   'mattins_cafe' : 'mattins',
-   'north_star' : 'appel',
-   'okenshields' : 'okies',
-   'risley_dining' : 'risley',
-   'robert_purcell_marketplace_eatery' : 'rpcc',
-   'rose_house_dining_room' : 'rose',
-   'rustys' : 'rustys',
-   'synapsis_cafe' : 'synapsis',
-   'trillium' : 'trillium'
-}
+/** String -> Obj -> 'a (obj[string]) */
+var get = function (p) { return function (x) { return x[p]; }; };
 
-var halls = [
-  '104',
-  // 'nasties',
-  'becker',
-  'cook',
-  'bethe',
-  'keeton',
-  'appel',
-  'okies',
-  'risley',
-  'rpcc',
-  'rose'
-];
+/********************************* FUNCTIONS. *********************************/
 
-var supported = {
-  '104west' : true,
-  'becker_house_dining_room' : true,
-  'cook_house_dining_room' : true,
-  'jansens_dining_room_bethe_house' : true,
-  'keeton_house_dining_room' : true,
-  'north_star' : true,
-  'okenshields' : true,
-  'risley_dining' : true,
-  'robert_purcell_marketplace_eatery' : true,
-  'rose_house_dining_room' : true
-}
+/**
+ * Resolves what hall the user wants to deal with.
+ * @param  {[type]} eateries [description]
+ * @return {[type]}          [description]
+ */
+var get_hall = function (provided) {
+  
+  // Should we ask the user, or has it told us?
+  return ((provided.hall) ? 
+      Promise.resolve({ hall: provided.hall })
+    : inquire([
+      { type: 'list',
+        message: 'What hall?',
+        paginated : true,
+        name: 'hall',
+        choices: provided.eateries.map(get('nameshort'))
+      }])
+    )
 
-// By default, commander splits the arguments. Let's join them.
-if (hall) {
-  if(!hall_id[hall]) return;
-  show_menu(hall);
-  return;
-}
-
-
-// Get the open status of all at once.
-rp('http://tangerine-tious.rhcloud.com/dining/location_status/')
-.then(function (body) {
-  var data = JSON.parse(body);
-  return data.locations
-  .map(function (x) {
-    if (!supported[x.id]) return null;
-    var change = new Date(x.event_changes[0].time);
-    console.log(change)
-    var message = x.status === 'open' ? 'open'
-      : "open in " + hdate.relativeTime(change).replace(" from now", '');
-    
-    // console.log(x.id)
-    var space = new Array(7 - shortname[x.id].length).join(' ');
-
-    return {
-      message: shortname[x.id] + space + " - " +  message + "",
-      id: x.id
-    }
+  // Find the info for that hall
+  .then(function (answers) {
+    var hall = hallname(answers.hall);
+    var es = provided.eateries.filter(function (e) { return e.nameshort === hall; });
+    if (es.length > 1) throw new Error('Repeated names?'); 
+    else return es[0];
   })
-  .filter(function(x) { 
-    return !!x;
-  });
-})
 
-.then(function (queries) {
-  // Ask which hall with a nice menu.
-  inquirer.prompt([
-    { type: 'list',
-      message: 'What hall?',
-      paginated : true,
-      name: 'hall',
-      choices: queries.map(function (x) { return x.message; })
-    }
-  ], function (answers) {
-    show_menu(answers.hall.split('-')[0].trim());
-  });
+  // Should only be triggred by a wrong argument, not list.
+  .catch(lib.error(
+    (provided.hall) ? 
+      'Could not find ' + program.args[0] + '.'
+    : 'Could not find hall/location with that name.'
+  ));
+};
 
-})
+/**
+ * Resolves to an operatingHours object for a given day
+ * @param  {Date}         we want the operating horus (day) for
+ * @return {Object}       Operating hours object, (a day) + eatery.id
+ */
+var get_day = function (date) { return function (eatery) {
 
-.catch(function (err) {
-  console.log('Ah! An error fetching the status of locations 😞');
-  console.log("Try running npm update -g cornell.");
-  console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
-  console.log(err.message);
-  process.exit();
-})
+  return Promise.resolve(eatery)
 
+  .then(function (e) {
+    var win_start = new Date(date);
+    win_start.setHours(0,0,0,0);
+    var win_end = new Date(date);
+    win_end.setHours(23,59,59,999);
 
+    var op_hours = e.operatingHours.map(function (day) {
+      day.date = new Date(day.date); // UTC, convert to EST -> -5 hours.
+      // day.date.setTime(day.date.getTime() - (5*60*60*1000)); // Needed?
+      return day;
+    })
+    .filter(function (day) {
+      return day.date.getTime() >= win_start && day.date.getTime() < win_end;
+    });
+
+    if (op_hours.length > 1 || op_hours < 1) throw new Error();
+
+    op_hours[0].id = eatery.id; // For record tracking.
+    return op_hours[0];
+
+  })
+
+  .catch(lib.error('Error processing date: ' + date));
+
+};};
+
+/**
+ * Prints menu for a day object (child of operatingHours)
+ * @param  {Object} day Day lol
+ * Object -> void
+ */
+var print_menu = function (day) { /* operatingHours object */
+
+  var pr = day.events.map(function (event) {
+    return '' + 
+    '\n' + event.descr + ' (' + event.start + ' - ' + event.end + ', ' + datestr(day.date) + ')' + 
+    '\n' + ((event.menu.length) < 1 ? 'Not available.' : 
+    event.menu.map(function (station) {
+      return '' +
+      station.category + '\n' + 
+      station.items.map(function (option) {
+        return '' +
+        ' - ' + option.item + ((option.healthy) ? ' 🍎' : '');
+      }).join('\n');
+    }).join('\n'));
+
+  }).join('\n');
+
+  console.log(pr);
+};
 
 
 /**
- * Fetches and displays manu information.
- * @param  {String} hall Hall to display the menu for. Must be a key 
- *                       for hall_id.
+ * Prints information about an eatery.
+ * @param  {Eatery} e to print
+ * Object -> void
  */
-function show_menu (hall) {
-  var today    = (new Date()).toDateString().replace(/ /g, '%20');
-  var tomorrow =  new Date(); 
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow = tomorrow.toDateString().replace(/ /g, '%20');
+var print_info = function (what) { return function (e) {
+  var name          = e.name;
+  var about         = e.aboutshort;
+  var online_order  = e.onlineOrderUrl || 'Not available.';
+  var phone         = e.contactPhone   || 'Not available.';
+  var email         = e.contactEmail   || 'Not available.';
+  var payment_types = '\n - ' +
+    e.payMethods.map(function (method) {
+      return method.descr;
+    }).join('\n - ');
+  var map_url = (e.latitude && e.longitude) ? 
+        'https://www.openstreetmap.org/?mlat=' + e.latitude + '&mlon=' + 
+         e.longitude + '#map=17/' + e.latitude +'/' + e.longitude 
+      : 'Not available.';
 
-  var menu_req = 'http://redapi-tious.rhcloud.com/dining/menu/' +
-                  hall_id[hall] + '/ALL/LOCATIONS';
-  var time_req = 'http://redapi-tious.rhcloud.com/dining/event/' +
-                  hall_id[hall] + '/' + today + '-' + tomorrow;
+  try {
+    var times = e.operatingHours.map(function (day) {
+      return day.date + 
+        '\n - ' + day.events.map(function (event) {
+          return event.descr + ': ' + event.start + ' - ' + event.end;
+        }).join('\n - ');
+    }).join('\n');
+
+  } catch (e) { console.trace(e); }
+
+  var p = (what === 'INFO') ? 
+          '\n' + name +
+          '\n' + about + '\n' +
+          '\n' + 'P: ' + phone + '  ' + 'E: ' + email +
+          '\n' + 'Online Ordering: ' + online_order +
+          '\n' + 'Location: ' + map_url +
+          '\n' + 'Accepts: ' + payment_types
+
+        : (what === 'TIME') ? times
   
-  // Request the menu
-  rp(menu_req)
+        : (what === 'UNSP') ? 
+          '\n' + 'TODO: UNSP PRINT FOR ' + name
 
-  .catch(function (err) {
-    console.log('Couldn\'t reach RedAPI. 😞');
-    console.log("Try running npm update -g cornell.");
-    console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
-    console.log(err.message);
-    process.exit();
-  })
+        : null;
+
+  if (p) console.log(p);
+  else throw new Error('Unspecified print command');
+
+};};
+
+
+/** Unfinished */
+var print_list = function (provided) {
+  var format = provided.format;
+  var formats = {
+    '%id'         : 'crseId',
+    '%subj'       : 'subject',
+    '%cnum'       : 'catalogNbr',
+    '%title'      : 'titleShort',
+    '%ltitle'     : 'titleLong',
+    '%desc'       : 'description',
+    '%breath'     : 'catalogBreadth',
+    '%dist'       : 'catalogDistr',
+    '%!over'      : 'catalogForbiddenOverlaps',
+    '%when'       : 'catalogWhenOffered',
+    '%reqs'       : 'catalogPrereqCoreq',
+    '%fee'        : 'catalogFee',
+    '%satisfies'  : 'catalogSatisfiesReq',
+    '%perm'       : 'catalogPermission',
+    '%subfield'   : 'catalogCourseSubfield',
+    '%outcomes'   : 'catalogOutcomes',
+    '%acareer'    : 'acadCareer',
+    '%agroup'     : 'acadGroup'
+  };
+
+  var pr = provided.eateries.map(function (e) {
+    Object.keys(formats).reduce(function (fmt, key) {
+      return fmt.replace(key, e[formats[key]]);;
+    }, provided.format);
+  }).join('\n');
+
+  console.log('Printing format', provided.format);
+};
+
+/** Returns only eateries with menus */
+var filter_menus = function (provided) {
+  // Get today for all eateries
+  var eateries = provided.eateries.map(get_day(new Date()));
+  return Promise.all(eateries)
   
-  // Print the menu
-  .then(function (body) {
-    var data = JSON.parse(body)[hall_id[hall]];
-    console.log();
-    Object.keys(data).forEach(function (meal) {
-      if (data[meal] === null) return;
-
-      console.log(chalk.green.underline(meal) + ':');
-      data[meal].forEach(function (menu_item) {
-        var extra = menu_item.healthy ? ' 🍎' : ''; 
-        console.log(' ' + menu_item.name + extra);
-      });
-      console.log();
+  // Get only the days for which we have menus
+  .then(function (days) {
+    return days.filter(function (day) {
+      return (day.events) ? day.events.filter(function (event) {
+        return event.menu && event.menu.length > 0;
+      }).length > 0 : false;
     });
   })
 
-  .catch(function (err) {
-    console.log('Couldn\'t the menus and stuff, srry. 😞');
-    console.log(err.message);
-    process.exit();
+  // Get the hall IDs for those days with menus.
+  .then(function (filtered_days) {
+    return filtered_days.map(function (d) { return d.id; });
   })
 
-  // Request the time open
-  .then(function () {
-    return rp(time_req);
-  })
-
-  .catch(function (err) {
-    console.log('Couldn\'t reach RedAPI. 😞');
-    console.log("Try running npm update -g cornell.");
-    console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
-    console.log(err.message);
-    process.exit();
-  })
-
-  // Print the time open
-  .then(function (body) {
-    var data = JSON.parse(body)[hall_id[hall]];
-
-    var atm = data.filter(function (event) {
-      var start = (new Date(event.start)).getTime();
-      var end   = (new Date(event.end)).getTime();
-      var now   = (new Date()).getTime();
-      return (start < now) && (now < end);
+  // Rebuild our eateries from these ids.
+  .then(function (ids) {
+    return provided.eateries.filter(function (e) {
+      return ids.indexOf(e.id) > -1;
     });
+  })
 
-    var nxt = data.filter(function (event) {
-      var start = (new Date(event.start)).getTime();
-      var end   = (new Date(event.end)).getTime();
-      var now   = (new Date()).getTime();
-      return (now < start) && (now < end);
+  // Pass-through provided stuff
+  .then(function (filtered_eateries) {
+    provided.eateries = filtered_eateries;
+    return provided;
+  })
+
+  .catch(lib.fatal('Error fetching which halls have menus.'));
+};
+
+
+
+
+/*************************** USER ACTION FUNCTIONS. ***************************/
+
+
+/** If the user wants to print all halls */
+var get_list = function (eateries, format) {
+  return Promise.resolve({
+      eateries : eateries, 
+      format   : format
     })
-    .sort(function (a, b) {
-      a = (new Date(a.start)).getTime();
-      b = (new Date(b.start)).getTime();
-      return (a < b) ? -1 : 1;
-    });
+    /** Print list */
+    .then(print_list)
+    /** If all other catches don't catch I guess */
+    .catch(lib.fatal('Ah! An error processing the information 😞'));
+};
 
-    if (atm.length  >  1) console.log('what now');
-    if (atm.length === 1) console.log(atm[0].summary);
-    if (atm.length  <  1) {
-      console.log('⛔️  ' + chalk.red.underline('Closed! Somewhere else maybe?') + ' 💃 💃 💃 ');
+/** If the user wants hall info */
+var get_info = function (eateries, uargs) {
+  return Promise.resolve({
+      eateries: eateries, 
+      hall: uargs[0] // Prob work something better here.
+    })
+    /** Get the user to pick a hall */
+    .then(get_hall)
+    /** Print info for the hall niceley */
+    .then(print_info('INFO'))
+    /** If all other catches don't catch I guess */
+    .catch(lib.fatal('Ah! An error processing the information 😞'));
+};
 
-      if (!nxt[0]) return console.log();
-      var next = (new Date(nxt[0].start));
-      var next_open = next.format('{weekday} {Month} {dd} ');
-      if ((new Date(nxt[0].start)).isTomorrow()) next_open = 'tomorrow ';
-      if ((new Date(nxt[0].start)).isToday()) next_open = '';
-      if (nxt.length > 0) console.log('   Opens:', next_open + next.format('{12hr}:{mm}{tt}'));
-    }
-    
-    return console.log();
-  })
+/** If the user wants menu info */
+var get_menu = function (eateries, uargs) {
+  return Promise.resolve({
+      eateries: eateries, 
+      hall: uargs[0] // Prob work something better here.
+    })
+    /** Only halls with menus. Also, did user pick right one? */
+    .then(filter_menus)
+    /** Get the user to pick a hall */
+    .then(get_hall)
+    /** Menu for today. */
+    .then(get_day(new Date()))
+    /** Print info for the hall niceley */
+    .then(print_menu)
+    /** If all other catches don't catch I guess */
+    .catch(lib.fatal('Ah! An error processing the information 😞'));
+};
 
-  .catch(function (err) {
-    console.log('Couldn\'t figure out the times, srry. 😞');
-    console.log("Try running npm update -g cornell.");
-    console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
-    console.log(err.message);
-    process.exit();
-  });
-}
+/** If the user want's time info */
+var get_time = function (eateries, uargs) {
+  return Promise.resolve({
+      eateries: eateries, 
+      hall: uargs[0] // Prob work something better here.
+    })
+    /** Get the user to pick a hall */
+    .then(get_hall)
+    /** Print info for the hall niceley */
+    .then(print_info('TIME'))
+    /** If all other catches don't catch I guess */
+    .catch(lib.fatal('Ah! An error processing the information 😞'));
+};
 
+/** If the user runs `conrell eat`, nothing else specified */
+var get_unsp = function (eateries, uargs) {
+  return Promise.resolve({
+      eateries: eateries, 
+      hall: uargs[0] // Prob work something better here.
+    })
+    /** Get the user to pick a hall */
+    .then(get_hall)
+    /** Print info for the hall niceley */
+    .then(print_info('INFO'))
+    /** If all other catches don't catch I guess */
+    .catch(lib.fatal('Ah! An error processing the information 😞'));
+};
+
+
+
+/********************************** THE MAIN **********************************/
+
+program
+  .usage  ('[location name]')
+  .option ('-m, --menu', 'Show menu only')
+  .option ('-t, --time', 'Show open times only')
+  .option ('-i, --info', 'Print general information')
+  .option ('-l, --list <format>', 'Print all halls with format')
+  .parse(process.argv);
+
+var user_wants = (program.list) ? 'LIST' 
+               : (program.info) ? 'INFO'
+               : (program.menu) ? 'MENU'
+               : (program.time) ? 'TIME'
+               :                  'UNSP',
+    user_args  = program.args;
+
+/** First, get the Eateries */
+rp('https://now.dining.cornell.edu/api/1.0/dining/eateries.json')
+
+.catch(lib.error('Could not reach the API.'))
+
+/** All good in the meta? Return the eatery array */
+.then(function (body) {
+  var obj = JSON.parse(body);
+  if (obj.status != "success") throw new Error();
+  return obj.data.eateries;
+})
+.catch(lib.fatal('Ah! An error fetching eateries 😞'))
+
+/** Do whatever the suer asked us to */
+.then(function (eateries) {
+  switch (user_wants) {
+    case 'LIST': return get_list(eateries, program.list);
+    case 'INFO': return get_info(eateries, user_args);
+    case 'MENU': return get_menu(eateries, user_args);
+    case 'TIME': return get_time(eateries, user_args);
+    case 'UNSP': return get_unsp(eateries, user_args);
+    default    : return get_unsp(eateries, user_args);
+  }
+})
+.catch(lib.fatal('Hmm! An unspecified error ocurred.'));
+
+/************************************ DONE ************************************/
+
+
+/** What eateries will we be working with? */
+// .then(function (eateries) {
+//   return (true) ? eateries : 
+//     eateries.filter(function (e) { return e.diningItems.length > 0; });
+// })
+
+// .catch(lib.fatal('Ah! An error with the the location list 😞'))
+
+// cornell eat okenshields --menu
+// 
+// cornell eat okenshields --hours
+// 
+// cornell eat okenshields --info
+// 
+
+// --map      opens map
+// --online   opens online ordering
 
 
 

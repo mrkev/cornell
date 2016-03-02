@@ -38,3 +38,11 @@ If you think `npm` is just a fad kids play with these days, and would rather go 
  - `cornell eat okies` - Okenshields' menu.
  - `cornell class mexico` - Search roster for classes containing "mexico".
  - `cornell class -s CS compilers` - Search CS classes containing compilers.
+
+## Changelog
+
+### 0.3.0 beta
+- Switched to cornell's official API. More info comming soon.
+- New feature! Never miss an update. New update notification.
+
+

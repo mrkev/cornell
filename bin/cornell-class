@@ -230,7 +230,7 @@ function display_classlist (classes) {
 
 
 function display_classinfo (clss) {
-  console.log(clss)
+  // console.log(clss)
 
   var acgr = clss.acadGroup, 
       accr = clss.acadCareer, 
@@ -257,7 +257,6 @@ function display_classinfo (clss) {
   
   if (prms)
     console.log(wrap('🔓  ' + prms, {width: 70}), '\n');
-
 
   var dscr = clss.description;
 

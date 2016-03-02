@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
 var program = require('commander');
+var lib     = require('../lib/common');
+
+lib.notifyUpdate();
 
 program
   .command('class [search]', 'search for class info')
@@ -10,7 +13,6 @@ program
 
 program.parse(process.argv);
 
-if (!process.argv.slice(2).length) {
-    program.help();
-}
-
+// if (!process.argv.slice(2).length) {
+//   program.help();
+// }
