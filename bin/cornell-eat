@@ -7,7 +7,7 @@ var program    = require('commander');
 var lib        = require('../lib/common');
 var hallname   = require('../lib/translations').hallname;
                  require('sugar');
-
+var print = console.log;
 /****************************** HELPERS & EXTRAS ******************************/
 
 function datestr (date) {
@@ -25,12 +25,25 @@ var inquire = function (opts) {
   return new Promise(function (res) {
     inquirer.prompt(opts, function (answers) {
       res(answers);
-    });  
+    });
   });
 };
 
 /** String -> Obj -> 'a (obj[string]) */
 var get = function (p) { return function (x) { return x[p]; }; };
+
+/** Day (op.Hours obj) {... date: String...} -> Day {... date: Date...} */
+var operating_hours_localize_date = function (day) {
+  if (day.date instanceof Date) return day;
+  day.date = new Date(day.date); // UTC, convert to EST -> +5 hours. Timzone shift
+  day.date.setTime(day.date.getTime() + (5*60*60*1000));
+  return day;
+};
+
+Array.prototype.assert_length = function(len) {
+  if (this.length != len) throw new Error("Length is not " + len);
+  else return this;
+};
 
 /********************************* FUNCTIONS. *********************************/
 
@@ -40,9 +53,9 @@ var get = function (p) { return function (x) { return x[p]; }; };
  * @return {[type]}          [description]
  */
 var get_hall = function (provided) {
-  
+
   // Should we ask the user, or has it told us?
-  return ((provided.hall) ? 
+  return ((provided.hall) ?
       Promise.resolve({ hall: provided.hall })
     : inquire([
       { type: 'list',
@@ -57,45 +70,54 @@ var get_hall = function (provided) {
   .then(function (answers) {
     var hall = hallname(answers.hall);
     var es = provided.eateries.filter(function (e) { return e.nameshort === hall; });
-    if (es.length > 1) throw new Error('Repeated names?'); 
+    if (es.length > 1) throw new Error('Repeated names?');
+    if (es.length < 1) throw new Error('No hall found');
     else return es[0];
   })
 
   // Should only be triggred by a wrong argument, not list.
   .catch(lib.error(
-    (provided.hall) ? 
+    (provided.hall) ?
       'Could not find ' + program.args[0] + '.'
     : 'Could not find hall/location with that name.'
   ));
 };
 
+
+
 /**
  * Resolves to an operatingHours object for a given day
  * @param  {Date}         we want the operating horus (day) for
  * @return {Object}       Operating hours object, (a day) + eatery.id
+ *                        null if hall is closed for the day.
  */
 var get_day = function (date) { return function (eatery) {
 
+  /** start of the day */
+  var win_start = new Date(date); win_start.setHours(0,0,0,0);
+  /** end of the day */
+  var win_end = new Date(date);   win_end.setHours(23,59,59,999);
+
+  /** Leggo. */
   return Promise.resolve(eatery)
 
   .then(function (e) {
-    var win_start = new Date(date);
-    win_start.setHours(0,0,0,0);
-    var win_end = new Date(date);
-    win_end.setHours(23,59,59,999);
 
-    var op_hours = e.operatingHours.map(function (day) {
-      day.date = new Date(day.date); // UTC, convert to EST -> -5 hours.
-      // day.date.setTime(day.date.getTime() - (5*60*60*1000)); // Needed?
-      return day;
-    })
-    .filter(function (day) {
-      return day.date.getTime() >= win_start && day.date.getTime() < win_end;
-    });
+    // console.log(e);
 
-    if (op_hours.length > 1 || op_hours < 1) throw new Error();
+    try {
+      var op_hours = e.operatingHours.map(operating_hours_localize_date)
+      .filter(function (day) {
+        // console.log(day.date.getTime() >= win_start, day.date.getTime() < win_end);
+        return day.date.getTime() >= win_start && day.date.getTime() < win_end;
+      });
+    }
 
+    catch (e) {console.trace(e);}
+
+    if (op_hours.length > 1) throw new Error();
     op_hours[0].id = eatery.id; // For record tracking.
+    
     return op_hours[0];
 
   })
@@ -111,13 +133,18 @@ var get_day = function (date) { return function (eatery) {
  */
 var print_menu = function (day) { /* operatingHours object */
 
+  // console.log(day)
+  if (day === null) {
+    console.log("Hall is closed ")
+  }
+
   var pr = day.events.map(function (event) {
-    return '' + 
-    '\n' + event.descr + ' (' + event.start + ' - ' + event.end + ', ' + datestr(day.date) + ')' + 
-    '\n' + ((event.menu.length) < 1 ? 'Not available.' : 
+    return '' +
+    '\n' + event.descr + ' (' + event.start + ' - ' + event.end + ', ' + datestr(day.date) + ')' +
+    '\n' + ((event.menu.length) < 1 ? 'Not available.' :
     event.menu.map(function (station) {
       return '' +
-      station.category + '\n' + 
+      station.category + '\n' +
       station.items.map(function (option) {
         return '' +
         ' - ' + option.item + ((option.healthy) ? ' 🍎' : '');
@@ -129,6 +156,26 @@ var print_menu = function (day) { /* operatingHours object */
   console.log(pr);
 };
 
+var print_time = function (e) {
+  var week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+ var times = "";
+  try {
+    times = e.operatingHours
+    .map(function (day) {
+      day.date_original_str = day.date;
+      return day;
+    })
+    .map(operating_hours_localize_date)
+    .map(function (day) {
+      return day.date_original_str + ": " + week[day.date.getDay()] +
+        '\n - ' + day.events.map(function (event) {
+          return event.descr + ': ' + event.start + ' - ' + event.end;
+        }).join('\n - ');
+    }).join('\n');
+
+  } catch (e) { console.trace(e); }
+  console.log(times);
+};
 
 /**
  * Prints information about an eatery.
@@ -145,14 +192,14 @@ var print_info = function (what) { return function (e) {
     e.payMethods.map(function (method) {
       return method.descr;
     }).join('\n - ');
-  var map_url = (e.latitude && e.longitude) ? 
-        'https://www.openstreetmap.org/?mlat=' + e.latitude + '&mlon=' + 
-         e.longitude + '#map=17/' + e.latitude +'/' + e.longitude 
+  var map_url = (e.latitude && e.longitude) ?
+        'https://www.openstreetmap.org/?mlat=' + e.latitude + '&mlon=' +
+         e.longitude + '#map=17/' + e.latitude +'/' + e.longitude
       : 'Not available.';
 
   try {
     var times = e.operatingHours.map(function (day) {
-      return day.date + 
+      return day.date +
         '\n - ' + day.events.map(function (event) {
           return event.descr + ': ' + event.start + ' - ' + event.end;
         }).join('\n - ');
@@ -160,7 +207,7 @@ var print_info = function (what) { return function (e) {
 
   } catch (e) { console.trace(e); }
 
-  var p = (what === 'INFO') ? 
+  var p = (what === 'INFO') ?
           '\n' + name +
           '\n' + about + '\n' +
           '\n' + 'P: ' + phone + '  ' + 'E: ' + email +
@@ -169,8 +216,8 @@ var print_info = function (what) { return function (e) {
           '\n' + 'Accepts: ' + payment_types
 
         : (what === 'TIME') ? times
-  
-        : (what === 'UNSP') ? 
+
+        : (what === 'UNSP') ?
           '\n' + 'TODO: UNSP PRINT FOR ' + name
 
         : null;
@@ -207,11 +254,51 @@ var print_list = function (provided) {
 
   var pr = provided.eateries.map(function (e) {
     Object.keys(formats).reduce(function (fmt, key) {
-      return fmt.replace(key, e[formats[key]]);;
+      return fmt.replace(key, e[formats[key]]);
     }, provided.format);
   }).join('\n');
 
   console.log('Printing format', provided.format);
+};
+
+/** @throws if hall not found */
+var user_picked_valid = function (provided) {
+  // AY: Check if no provided => undefined
+  if (!provided.hall) return provided;
+  if (!hallname(provided.hall)) throw new Error('Hall not found.');
+  return provided;
+};
+
+/** @throws if hall is closed. Assumes provided.hall*/
+var user_picked_closed = function (provided) {
+  if (!provided.hall) return provided;
+  if (!hallname(provided.hall)) throw new Error('Hall not found.');
+
+  var want_id  = provided.eateries.filter(function (day) {
+    return (day.nameshort === hallname(provided.hall));
+  })
+  .assert_length(1)[0].id;
+
+  var eateries = provided.eateries.map(get_day(new Date()));
+  return Promise.all(eateries)
+
+  // Get only the days for which we have events
+  .then(function (days) {
+    return days.filter(function (day) {
+      return (day.events.length > 0); 
+    });
+  })
+
+  // Get the hall IDs for those days with events.
+  .then(function (filtered_days) {
+    return filtered_days.map(function (d) { return d.id; });
+  })
+
+  // Throw an error if the hall we want is not here.
+  .then(function (ids) {
+    if (ids.indexOf(want_id) < 0) throw new Error('Hall is closed.');
+    else return provided;
+  });
 };
 
 /** Returns only eateries with menus */
@@ -219,7 +306,7 @@ var filter_menus = function (provided) {
   // Get today for all eateries
   var eateries = provided.eateries.map(get_day(new Date()));
   return Promise.all(eateries)
-  
+
   // Get only the days for which we have menus
   .then(function (days) {
     return days.filter(function (day) {
@@ -259,7 +346,7 @@ var filter_menus = function (provided) {
 /** If the user wants to print all halls */
 var get_list = function (eateries, format) {
   return Promise.resolve({
-      eateries : eateries, 
+      eateries : eateries,
       format   : format
     })
     /** Print list */
@@ -271,7 +358,7 @@ var get_list = function (eateries, format) {
 /** If the user wants hall info */
 var get_info = function (eateries, uargs) {
   return Promise.resolve({
-      eateries: eateries, 
+      eateries: eateries,
       hall: uargs[0] // Prob work something better here.
     })
     /** Get the user to pick a hall */
@@ -285,9 +372,15 @@ var get_info = function (eateries, uargs) {
 /** If the user wants menu info */
 var get_menu = function (eateries, uargs) {
   return Promise.resolve({
-      eateries: eateries, 
+      eateries: eateries,
       hall: uargs[0] // Prob work something better here.
     })
+    /** Check if the user picked a valid hall */
+    .then(user_picked_valid)
+    .catch(lib.error("Couldn't find any hall named " + uargs[0] + ", sorry."))
+    /** Check if the user picked a closed hall */
+    .then(user_picked_closed)
+    .catch(lib.error("Hall is closed."))
     /** Only halls with menus. Also, did user pick right one? */
     .then(filter_menus)
     /** Get the user to pick a hall */
@@ -303,13 +396,13 @@ var get_menu = function (eateries, uargs) {
 /** If the user want's time info */
 var get_time = function (eateries, uargs) {
   return Promise.resolve({
-      eateries: eateries, 
+      eateries: eateries,
       hall: uargs[0] // Prob work something better here.
     })
     /** Get the user to pick a hall */
     .then(get_hall)
     /** Print info for the hall niceley */
-    .then(print_info('TIME'))
+    .then(print_time)
     /** If all other catches don't catch I guess */
     .catch(lib.fatal('Ah! An error processing the information 😞'));
 };
@@ -317,7 +410,7 @@ var get_time = function (eateries, uargs) {
 /** If the user runs `conrell eat`, nothing else specified */
 var get_unsp = function (eateries, uargs) {
   return Promise.resolve({
-      eateries: eateries, 
+      eateries: eateries,
       hall: uargs[0] // Prob work something better here.
     })
     /** Get the user to pick a hall */
@@ -328,19 +421,24 @@ var get_unsp = function (eateries, uargs) {
     .catch(lib.fatal('Ah! An error processing the information 😞'));
 };
 
+var get_help = function (eateries, uargs) {
+
+  console.log("Run `cornell eat --help` for usage info.")
+} 
+
 
 
 /********************************** THE MAIN **********************************/
 
 program
   .usage  ('[location name]')
-  .option ('-m, --menu', 'Show menu only')
-  .option ('-t, --time', 'Show open times only')
-  .option ('-i, --info', 'Print general information')
-  .option ('-l, --list <format>', 'Print all halls with format')
+  .option ('-m, --menu', 'Show menu for an open hall')
+  .option ('-t, --time', 'Show open times for a hall')
+  .option ('-i, --info', 'Print general hall information')
+  // .option ('-l, --list <format>', 'Print all halls with format')
   .parse(process.argv);
 
-var user_wants = (program.list) ? 'LIST' 
+var user_wants = (program.list) ? 'LIST'
                : (program.info) ? 'INFO'
                : (program.menu) ? 'MENU'
                : (program.time) ? 'TIME'
@@ -367,32 +465,16 @@ rp('https://now.dining.cornell.edu/api/1.0/dining/eateries.json')
     case 'INFO': return get_info(eateries, user_args);
     case 'MENU': return get_menu(eateries, user_args);
     case 'TIME': return get_time(eateries, user_args);
-    case 'UNSP': return get_unsp(eateries, user_args);
-    default    : return get_unsp(eateries, user_args);
+    case 'UNSP':
+    default    : return get_help(eateries, user_args);
   }
 })
 .catch(lib.fatal('Hmm! An unspecified error ocurred.'));
 
-/************************************ DONE ************************************/
+/*********************************** NOTES. ***********************************/
 
-
-/** What eateries will we be working with? */
-// .then(function (eateries) {
-//   return (true) ? eateries : 
-//     eateries.filter(function (e) { return e.diningItems.length > 0; });
-// })
-
-// .catch(lib.fatal('Ah! An error with the the location list 😞'))
-
-// cornell eat okenshields --menu
-// 
-// cornell eat okenshields --hours
-// 
-// cornell eat okenshields --info
-// 
-
-// --map      opens map
-// --online   opens online ordering
+// next, --map      opens map
+// next, --online   opens online ordering
 
 
 
