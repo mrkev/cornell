@@ -88,6 +88,8 @@ program
   })
   .parse(process.argv);
 
+if (program.subject) program.subject = program.subject.toUpperCase();
+
 // Search term?
 var search = program.args.join(' ');
 if (search) { search = '&q=' + search; }
