@@ -7,6 +7,8 @@ var program    = require('commander');
 var chalk      = require('chalk');
 var lib        = require('../lib/common');
 var hallname   = require('../lib/translations').hallname;
+var opener     = require("opener");
+
                  require('sugar');
 
 /****************************** HELPERS & EXTRAS ******************************/
@@ -51,6 +53,8 @@ Array.prototype.assert_length = function(len) {
 
 /**
  * Resolves what hall the user wants to deal with.
+ * todo, better error if user picks hall that exists, but
+ * isn't in provided (because it's been filtered earlier)?
  * @param  {[type]} eateries [description]
  * @return {[type]}          [description]
  */
@@ -150,7 +154,7 @@ var print_menu = function (day) { /* operatingHours object */
       chalk.red.bold(station.category) + '\n' +
       station.items.map(function (option) {
         return '' +
-        ((option.healthy) ? ' 🍎  ' : '  • ') + option.item //+ ((option.healthy) ? ' 🍎' : '');
+        ((option.healthy) ? ' 🍎  ' : '  • ') + option.item; //+ ((option.healthy) ? ' 🍎' : '');
       }).join('\n');
     }).join('\n'));
 
@@ -184,6 +188,14 @@ var print_time = function (e) {
   console.log(times);
 };
 
+/** @return null | url to given eatery */
+var get_map_url = function (e) {
+  return (e.latitude && e.longitude) ?
+      'https://www.openstreetmap.org/?mlat=' + e.latitude + '&mlon=' +
+       e.longitude + '#map=17/' + e.latitude +'/' + e.longitude
+    : null;
+};
+
 /**
  * Prints information about an eatery.
  * @param  {Eatery} e to print
@@ -195,17 +207,14 @@ var print_info = function (what) { return function (e) {
   var url           = function (u) { return (!u) ? null : '\n ▶ ' + chalk.underline(u); };
   var name          = e.name;
   var about         = e.aboutshort;
-  var phone         = e.contactPhone   || na;
-  var email         = e.contactEmail   || na;
+  var phone         = e.contactPhone        || na;
+  var email         = e.contactEmail        || na;
   var online_order  = url(e.onlineOrderUrl) || na;
+  var map_url       = url(get_map_url(e))   || na;
   var payment_types = '\n ✔ ' +
     e.payMethods.map(function (method) {
       return method.descr;
     }).join('\n ✔ ');
-  var map_url = (e.latitude && e.longitude) ?
-        url('https://www.openstreetmap.org/?mlat=' + e.latitude + '&mlon=' +
-         e.longitude + '#map=17/' + e.latitude +'/' + e.longitude)
-      : na;
 
   online_order = (online_order);
   phone        = (phone);
@@ -320,7 +329,25 @@ var filter_menus = function (provided) {
   .catch(lib.fatal('Error fetching which halls have menus.'));
 };
 
+var filter_maps = function (provided) {
+  return Promise.resolve(true)
 
+  // 
+  .then(function () {
+    return provided.eateries.filter(function (e) {
+      return !!get_map_url(e);
+    });
+  })
+
+  // Pass-through provided stuff
+  .then(function (filtered_eateries) {
+    provided.eateries = filtered_eateries;
+    return provided;
+  })
+
+  .catch(lib.fatal('Error filtering which halls have maps.'));
+
+};
 
 
 /*************************** USER ACTION FUNCTIONS. ***************************/
@@ -405,6 +432,24 @@ var get_help = function (eateries, uargs) {
     .catch(lib.fatal('Hmm, something is quite broken here.'));
 };
 
+var get_mapa = function (eateries, uargs) {
+  return Promise.resolve({
+      eateries: eateries,
+      hall: uargs[0] // Prob work something better here.
+    })
+    /** Check if the user picked a valid hall */
+    .then(user_picked_valid)
+    .catch(lib.error("Couldn't find any hall named " + uargs[0] + ", sorry."))
+    /** todo, Only halls with maps. Also, did user pick right one? */
+    .then(filter_maps)
+    /** Get the user to pick a hall */
+    .then(get_hall)
+    /** Get the map URL */
+    .then(get_map_url)
+    .then(opener)
+    /** Woah, don't know what could've gone wrong here */
+    .catch(lib.fatal('Ah! An error opening the map, sorry 😞'));
+};
 
 
 /********************************** THE MAIN **********************************/
@@ -414,6 +459,7 @@ program
   .option ('-m, --menu', 'Show menu for an open hall')
   .option ('-t, --time', 'Show open times for a hall')
   .option ('-i, --info', 'Print general hall information')
+  .option ('-w, --map',  'Open a map to a given hall')
   // .option ('-l, --list <format>', 'Print all halls with format')
   .on('--help', function(){
     console.log('  Examples:');
@@ -430,6 +476,7 @@ var user_wants = (program.list) ? 'LIST'
                : (program.info) ? 'INFO'
                : (program.menu) ? 'MENU'
                : (program.time) ? 'TIME'
+               : (program.map)  ? 'MAPA'
                :                  'UNSP',
     user_args  = program.args;
 
@@ -453,6 +500,7 @@ rp('https://now.dining.cornell.edu/api/1.0/dining/eateries.json')
     case 'INFO': return get_info(eateries, user_args);
     case 'MENU': return get_menu(eateries, user_args);
     case 'TIME': return get_time(eateries, user_args);
+    case 'MAPA': return get_mapa(eateries, user_args);
     case 'UNSP': return get_help(eateries, user_args);
     default    : return get_help(eateries, user_args);
   }
@@ -461,7 +509,6 @@ rp('https://now.dining.cornell.edu/api/1.0/dining/eateries.json')
 
 /*********************************** NOTES. ***********************************/
 
-// next, --map      opens map
 // next, --online   opens online ordering
 // next, --list     list's following pattern, much like in `cornell class`
 
