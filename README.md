@@ -34,15 +34,14 @@ If you think `npm` is just a fad kids play with these days, and would rather go 
 
 ## Usage 
  - `cornell --help` - Always a good idea 
- - `cornell eat` - Let's you pick a hall, view the menu.
- - `cornell eat okies` - Okenshields' menu.
+ - `cornell eat --menu` - Lists open halls. Select one for menus.
+ - `cornell eat --time okies` - Lists a few days of Okenshields open hours.
  - `cornell class mexico` - Search roster for classes containing "mexico".
  - `cornell class -s CS compilers` - Search CS classes containing compilers.
 
 ## Changelog
 
-### 0.3.0 beta
-- Switched to cornell's official API. More info comming soon.
-- New feature! Never miss an update. New update notification.
-
+### 1.0.0
+- Switched to cornell's official dinning JSON!
+- Never miss an update. New update notification.
 
