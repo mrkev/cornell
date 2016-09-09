@@ -11,18 +11,6 @@ var Promise = require('es6-promise').Promise;
 
 /////////////////////////////// Helper functions ///////////////////////////////
 
-/**
- * Promsie wraper for Inquirer.
- * @param  {Array} questions    Standard Inquirer question array
- * @return {Promise}            Resolves to the standard answers
- *                              object after the user answers
- *                              the questions
- */
-var whatnow = function (questions) {
-  return new Promise(function (res) {
-    inquirer.prompt(questions, res);
-  });
-};
 
 /**
  * Takes a {class}, replaces format tokens with values.
@@ -134,7 +122,7 @@ Promise.all([rosters, subjects]).then(function (res) {
   // No search term or subject. The hell does 
   // this user want? Offer a menu. 👌
   if (!search && !program.subject) {
-    return whatnow([
+    return inquirer.prompt([
       { type: 'list',
         message: 'What subject?',
         paginated : true,
@@ -222,7 +210,7 @@ function display_classlist (classes) {
         name: 'clss',
         choices: Object.keys(display_list)
       }
-    ], function(answers) {
+    ]).then(function(answers) {
       display_classinfo(display_list[answers.clss]);
     });
   }

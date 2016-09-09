@@ -20,19 +20,6 @@ function datestr (date) {
   return local.toJSON().slice(0, 10);
 }
 
-/**
- * Promise-ful wrapper around inquirer.js
- * @param  {Options} opts See inquirer docs
- * @return {Promise}      To inquirer answers
- */
-var inquire = function (opts) {
-  return new Promise(function (res) {
-    inquirer.prompt(opts, function (answers) {
-      res(answers);
-    });
-  });
-};
-
 /** String -> Obj -> 'a (obj[string]) */
 var get = function (p) { return function (x) { return x[p]; }; };
 
@@ -63,7 +50,7 @@ var get_hall = function (provided) {
   // Should we ask the user, or has it told us?
   return ((provided.hall) ?
       Promise.resolve({ hall: provided.hall })
-    : inquire([
+    : inquirer.prompt([
       { type: 'list',
         message: 'What hall?',
         paginated : true,
