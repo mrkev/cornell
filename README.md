@@ -1,5 +1,7 @@
 # Cornell CLI [![Dependencies](https://david-dm.org/mrkev/cornell.png)](https://david-dm.org/mrkev/cornell#info=dependencies)
 
+![gif 🙌](http://67.media.tumblr.com/f8af6c517acb37cda749d93b27a3cbaa/tumblr_nrz9hhevIZ1t86pqso1_1280.gif)
+
 So it's like Cornell info on your Terminal. 
 
 ## Install
