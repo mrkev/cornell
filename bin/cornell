@@ -7,7 +7,8 @@ lib.notifyUpdate();
 
 program
   .command('class [search]', 'search for class info')
-  .command('eat [hall]', 'display menus for hall');
+  .command('eat [hall]',     'display menus for hall')
+  .command('netid [search]', 'get people\'s netid or name')
   // .command('hours [hall]', 'show hours for dining hall')
   // .command('print [printer] [document]', 'show hours for dining hall')
 

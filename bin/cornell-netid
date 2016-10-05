@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+'use strict';
+
+let Plant    = require('plant.js');
+let program  = require('commander');
+let chalk    = require('chalk');
+let inquirer = require('inquirer');
+
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+
+program
+  .usage  ('<option> [query string]')
+  // .option('-l, --list [format]', 'Print with format [%s]')
+  .on('--help', function(){
+    console.log('  Examples:');
+    console.log('');
+    console.log('    $ cornell netid Ajay');
+    console.log('');
+    console.log('    $ cornell netid keh222');
+    console.log('');
+  })  .parse(process.argv);
+
+let query   = program.args.join("+");
+
+if (!query) return console.log("Run `cornell netid --help` for usage info.")
+
+let browser = new Plant();
+
+
+/** Takes DOM for a person page, returns info object */
+let extract_single_result = ($) => {
+
+  let name = $("#peoplename").text()
+    .replace('vCard', '')
+    .replace(/\t+/g, '')
+    .split('\n')
+    .filter((l) => l !== '')[0]
+
+  let info = $("#generalinfo").text()
+    .replace(/\t+/g, '')
+    .split('\n')
+    .filter((l) => l !== '')
+    .reduce((acc, x) => {
+      if (!acc['$']) {
+        acc['$'] = x.toLowerCase().replace(':', '');
+      } else {
+        acc[acc['$']] = x;
+        delete acc['$']
+      }
+      return acc;
+    }, {name: name});
+
+  return info;
+}
+
+/** Takes DOM for a search results page, returns info object list */
+let extract_search_results = ($) => {
+
+  var res = []
+
+  $('.results').each(function (i, elem) {
+
+    let type = $(this).find('caption').text().replace(/\([0-9]+\)/, '');
+    // each table: students, alumni, staff, etc
+    let info = $(this).find('tbody').text().replace(/(  )+/g, '')
+      .split('\n')
+      .filter(l => l !== '\r' && l !== ' \r' && l !== '')
+      .map(l => l.replace('\r', '').split(':'))
+      .reduce((acc, x) => {
+        if (x.length == 1) {
+          acc.unshift({});
+          acc[0].name = x[0];
+          acc[0].type = type;
+        }
+        else {
+          acc[0][x[0].toLowerCase()] = x[1].trim()
+        }
+        return acc;
+      }, []);
+
+    res = res.concat(info)
+  });
+
+  return res;
+
+}
+
+browser
+// Query cornell people
+.get('http://www.cornell.edu/search/people.cfm?q=' + query + '&tab=people')
+
+// Get list of people found
+.then(($) =>
+
+  // Search results page, extract all results from
+    ($('#people-results').find("#searchresults").length == 0) ?
+       extract_search_results($)
+  // Straight to the info page; only one result
+    : [extract_single_result($)]
+
+)
+
+/*
+[ { name: 'Seunghee S. Ha',
+    type: 'Alumni ',
+    email: 'ssh17@cornell.edu',
+    netid: 'ssh17' }, ... ]
+ */
+
+// Filterning
+.then((res) => {
+
+  // We don't need to filter
+  if (res.length < 2 || program.N || program.M) return res;
+
+  // We want to filter. Filter.
+  let max_name = res.reduce((acc, x) => x.name.length > acc ? x.name.length : acc, 0)
+
+  return inquirer.prompt([{
+    type: 'autocomplete',
+    name: 'student',
+    message: 'Several matches',
+    source: ((answersSoFar, input) => Promise.resolve(
+      res.filter(x => (!input)
+            || (x.name.indexOf(input) > -1)
+            || (x.netid && x.netid.indexOf(input) > -1)
+            || (x.cwid && x.cwid.indexOf(input) > -1)
+        ).map(x => x.name + ' '.repeat(max_name - x.name.length) + ' | ' + (x.netid || x.cwid)))),
+
+  }])
+  .then(ans => {
+    let id = ans.student.split('|')[1].trim()
+  // could netids and cwids conflct => this filter.len == 2 ?
+    return [res.filter(s => s.netid === id || s.cwid === id )[0]]
+  });
+})
+
+
+/*
+[ { name: 'Seunghee S. Ha',
+    type: 'Alumni ',
+    email: 'ssh17@cornell.edu',
+    netid: 'ssh17' }, ... ]
+ */
+
+// Print
+// .then(s => s.map(x => program.N ? x.netid :
+//                       program.M ? x.name  : x).filter(x => x).join('\n'))  // cwid's will be undefined
+
+.then(s => {
+  if (s.length === 0) return console.log('nothing...');
+  if (program.N) console.log(print_prop('netid')(s))
+  if (program.M) console.log(print_prop('name')(s))
+
+  s.map(print_info)
+})
+
+.catch(console.error)
+
+
+let print_prop = (prop) => (s) => console.log(s.map(x => x[prop]).join('\n'));
+
+let print_info = i => {
+  if (!i) return console.log('nothing...');
+  Object.keys(i).forEach(k => console.log(chalk.green(k + ": ") + i[k]));
+}
