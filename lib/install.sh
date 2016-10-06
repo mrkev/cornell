@@ -8,7 +8,7 @@ if ! (is_executable npm && is_executable node); then
 
   # We are running in OSX, and have no npm. Fix that. We will,
   #   - Make sure .bash_profile exists (required for nvm).
-  #   - Install nvm@0.24.1 using their own script
+  #   - Install nvm using their own script
   #   - Reload .bash_profile, now with nvm on $PATH
   #   - Install latest iojs
   #   - Make it the default `node`
@@ -18,11 +18,11 @@ if ! (is_executable npm && is_executable node); then
   case "$OSTYPE" in
     darwin*)
       touch ~/.bash_profile                                   && \
-      curl https://raw.githubusercontent.com/creationix/nvm/v0.29.0/install.sh | bash && \
+      curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash && \
       echo 'Installing latest iojs...'                        && \
       . ~/.bash_profile                                       && \
-      nvm install iojs                                        && \
-      nvm alias default iojs                                  && \
+      nvm install v6                                          && \
+      nvm alias default v6                                    && \
       echo 'Installing cornell...'                            && \
       npm install -g cornell                                  && \
       echo ""                                                 && \
