@@ -8,8 +8,9 @@ var chalk      = require('chalk');
 var lib        = require('../lib/common');
 var hallname   = require('../lib/translations').hallname;
 var opener     = require("opener");
-
                  require('sugar');
+
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
 /****************************** HELPERS & EXTRAS ******************************/
 
@@ -51,11 +52,14 @@ var get_hall = function (provided) {
   return ((provided.hall) ?
       Promise.resolve({ hall: provided.hall })
     : inquirer.prompt([
-      { type: 'list',
-        message: 'What hall?',
-        paginated : true,
+      { type: 'autocomplete',
+        message: 'Which hall?',
         name: 'hall',
-        choices: provided.eateries.map(get('nameshort'))
+        source: function (answers, input) {
+          return Promise.resolve(provided.eateries
+            .map(get('nameshort'))
+            .filter(lib.filter_on(input)))
+        }
       }])
     )
 

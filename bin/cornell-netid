@@ -5,6 +5,7 @@ let Plant    = require('plant.js');
 let program  = require('commander');
 let chalk    = require('chalk');
 let inquirer = require('inquirer');
+let lib      = require('../lib/common');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -120,13 +121,9 @@ browser
     type: 'autocomplete',
     name: 'student',
     message: 'Several matches',
-    source: ((answersSoFar, input) => Promise.resolve(
-      res.filter(x => (!input)
-            || (x.name.indexOf(input) > -1)
-            || (x.netid && x.netid.indexOf(input) > -1)
-            || (x.cwid && x.cwid.indexOf(input) > -1)
-        ).map(x => x.name + ' '.repeat(max_name - x.name.length) + ' | ' + (x.netid || x.cwid)))),
-
+    source: (answersSoFar, input) => Promise.resolve(
+      res.map(x => x.name + ' '.repeat(max_name - x.name.length) + ' | ' + (x.netid || x.cwid))
+         .filter(lib.filter_on(input))),
   }])
   .then(ans => {
     let id = ans.student.split('|')[1].trim()

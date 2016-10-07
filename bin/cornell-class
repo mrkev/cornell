@@ -2,18 +2,15 @@
 
 'use strict';
 /* global require, Promise, process */ 
-var rp = require('request-promise');
+var rp       = require('request-promise');
 var inquirer = require('inquirer');
-var program = require('commander');
-var chalk = require('chalk');
-var wrap = require('word-wrap');
-var Promise = require('es6-promise').Promise;
+var program  = require('commander');
+var chalk    = require('chalk');
+var wrap     = require('word-wrap');
+var Promise  = require('es6-promise').Promise;
+var lib      = require('../lib/common');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
-
-var filter_on = function(input) { return function (x) {
-  return (!input) || x.toLowerCase().indexOf(input.toLowerCase()) > -1
-}}
 
 /////////////////////////////// Helper functions ///////////////////////////////
 
@@ -136,7 +133,7 @@ Promise.all([rosters, subjects]).then(function (res) {
       source: function(answers, input) {
         var choices = subjects
           .map(function (x) {return x.slug + ' ' + x.descr;})
-          .filter(filter_on(input));
+          .filter(lib.filter_on(input));
 
         return Promise.resolve(choices)
       }}])
@@ -220,7 +217,7 @@ function display_classlist (classes) {
         name: 'clss',
         source: function(answers, input) {
           var choices = Object.keys(display_list)
-            .filter(filter_on(input));
+            .filter(lib.filter_on(input));
           return Promise.resolve(choices)
         }
       }])
