@@ -9,6 +9,12 @@ var chalk = require('chalk');
 var wrap = require('word-wrap');
 var Promise = require('es6-promise').Promise;
 
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+
+var filter_on = function(input) { return function (x) {
+  return (!input) || x.toLowerCase().indexOf(input.toLowerCase()) > -1
+}}
+
 /////////////////////////////// Helper functions ///////////////////////////////
 
 
@@ -122,14 +128,19 @@ Promise.all([rosters, subjects]).then(function (res) {
   // No search term or subject. The hell does 
   // this user want? Offer a menu. 👌
   if (!search && !program.subject) {
-    return inquirer.prompt([
-      { type: 'list',
-        message: 'What subject?',
-        paginated : true,
-        name: 'subject',
-        choices: subjects.map(function (x) {return x.slug + ' ' + x.descr;})
-      }
-    ]).then(function (answers) {
+    return inquirer
+    .prompt([{
+      type: 'autocomplete',
+      name: 'subject',
+      message: 'What subject?',
+      source: function(answers, input) {
+        var choices = subjects
+          .map(function (x) {return x.slug + ' ' + x.descr;})
+          .filter(filter_on(input));
+
+        return Promise.resolve(choices)
+      }}])
+    .then(function (answers) {
       var sub_slug = answers.subject.split(' ')[0];
       return [{slug : sub_slug}];
     });
@@ -204,13 +215,16 @@ function display_classlist (classes) {
   // Display a nice class menu
   else {
     inquirer.prompt([
-      { type: 'list',
-        paginated : true,
+      { type: 'autocomplete',
         message: 'Info for:',
         name: 'clss',
-        choices: Object.keys(display_list)
-      }
-    ]).then(function(answers) {
+        source: function(answers, input) {
+          var choices = Object.keys(display_list)
+            .filter(filter_on(input));
+          return Promise.resolve(choices)
+        }
+      }])
+    .then(function(answers) {
       display_classinfo(display_list[answers.clss]);
     });
   }
