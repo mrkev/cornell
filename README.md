@@ -6,6 +6,8 @@ So it's like Cornell info on your Terminal.
 
 ## Install
 
+NOTE: `cornell` is only compatible with the latest versions of node.js. Make sure you have node 6 installed.
+
 If you have node.js: 
 
     npm install -g cornell
