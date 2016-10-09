@@ -4,6 +4,7 @@ var program = require('commander');
 var lib     = require('../lib/common');
 
 lib.notifyUpdate();
+lib.notifyVersion();
 
 program
   .command('class [search]', 'search for class info')
