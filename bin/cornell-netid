@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 'use strict';
 
-let Plant    = require('plant.js');
 let program  = require('commander');
 let chalk    = require('chalk');
 let inquirer = require('inquirer');
 let lib      = require('../lib/common');
+let netid    = require('../src/netid');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -25,81 +25,7 @@ let query   = program.args.join("+");
 
 if (!query) return console.log("Run `cornell netid --help` for usage info.")
 
-let browser = new Plant();
-
-
-/** Takes DOM for a person page, returns info object */
-let extract_single_result = ($) => {
-
-  let name = $("#peoplename").text()
-    .replace('vCard', '')
-    .replace(/\t+/g, '')
-    .split('\n')
-    .filter((l) => l !== '')[0]
-
-  let info = $("#generalinfo").text()
-    .replace(/\t+/g, '')
-    .split('\n')
-    .filter((l) => l !== '')
-    .reduce((acc, x) => {
-      if (!acc['$']) {
-        acc['$'] = x.toLowerCase().replace(':', '');
-      } else {
-        acc[acc['$']] = x;
-        delete acc['$']
-      }
-      return acc;
-    }, {name: name});
-
-  return info;
-}
-
-/** Takes DOM for a search results page, returns info object list */
-let extract_search_results = ($) => {
-
-  var res = []
-
-  $('.results').each(function (i, elem) {
-
-    let type = $(this).find('caption').text().replace(/\([0-9]+\)/, '');
-    // each table: students, alumni, staff, etc
-    let info = $(this).find('tbody').text().replace(/(  )+/g, '')
-      .split('\n')
-      .filter(l => l !== '\r' && l !== ' \r' && l !== '')
-      .map(l => l.replace('\r', '').split(':'))
-      .reduce((acc, x) => {
-        if (x.length == 1) {
-          acc.unshift({});
-          acc[0].name = x[0];
-          acc[0].type = type;
-        }
-        else {
-          acc[0][x[0].toLowerCase()] = x[1].trim()
-        }
-        return acc;
-      }, []);
-
-    res = res.concat(info)
-  });
-
-  return res;
-
-}
-
-browser
-// Query cornell people
-.get('http://www.cornell.edu/search/people.cfm?q=' + query + '&tab=people')
-
-// Get list of people found
-.then(($) =>
-
-  // Search results page, extract all results from
-    ($('#people-results').find("#searchresults").length == 0) ?
-       extract_search_results($)
-  // Straight to the info page; only one result
-    : [extract_single_result($)]
-
-)
+netid.search(query)
 
 /*
 [ { name: 'Seunghee S. Ha',
