@@ -21,8 +21,33 @@ const subjects = roster => (roster
     }))
   )
 
+const search = query => Promise.resolve(query)
+  .then(query => { query.search = query.search || ''; return query })
+  .then(query => {
+    if (!query.roster) return rosters()
+      .then(rosters => rosters.filter(rost => rost.current)[0].slug)
+      .then(slug => { query.roster = slug; return query })
+    else return query
+  })
+  .then(query => {
+    query.subject = query.subjects || query.subject
+    if (!query.subject) return subjects(query.roster)
+      .then(subjects => subjects.map(subj => subj.slug))
+      .then(subjects => { query.subject = subjects; return query })
+    if (Array.isArray(query.subject)) return query;
+    else {
+     query.subject = [query.subject]; return query
+    }
+  })
+  .then(query => query.subject.map(subject => rp(`https://classes.cornell.edu/api/2.0/search/classes.json?roster=${query.roster}&subject=${subject}` + query.search)))
+  .then(requests => Promise.all(requests))
+  .then(bodies => bodies
+    .map(body => JSON.parse(body).data.classes)
+    .filter(classes => classes.length > 0)
+    .reduce((acc, clss) => acc.concat(clss)))
 
 module.exports = {
   subjects,
-  rosters
+  rosters,
+  search,
 }

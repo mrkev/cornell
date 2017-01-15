@@ -137,23 +137,10 @@ classes.subjects(roster).then(subjects => {
   }
 
 }).then(subjects => {
-  const requests = subjects.map(subj => rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=' + roster + '&subject=' + subj.slug + search))
-
-  Promise.all(requests)
-    .then(function (bodies) {
-      return bodies.map(function (body) {
-        return JSON.parse(body).data.classes;
-      })
-      .filter(function (classes) {
-        return classes.length > 0;
-      })
-      .reduce(function (acc, clss) {
-        return acc.concat(clss);
-      });
-    })
-    .then(function (classes) {
-      return display_classlist(classes);
-    });
+  classes.search({roster, subjects: subjects.map(s => s.slug), search})
+  .then(function (classes) {
+    return display_classlist(classes);
+  });
 })
 .catch(err => {
   console.log("Roster not available. 😞");
