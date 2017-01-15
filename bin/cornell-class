@@ -113,35 +113,32 @@ classes.subjects(roster).then(subjects => {
 
         return Promise.resolve(choices)
       }}])
-    .then(function (answers) {
-      var sub_slug = answers.subject.split(' ')[0];
+    .then(answers => {
+      const sub_slug = answers.subject.split(' ')[0];
       return [{slug : sub_slug}];
     });
   }
 
   // We got a search term, and a subject. Yay! lol/
   else if (search && program.subject) {
-    console.log('Searching', program.subject, '\n');
-    return [{slug : program.subject}];
+    console.log('Searching', program.subject, '\n')
+    return [{slug : program.subject}]
   }
 
   // Show entire subject.
   else if (!search && program.subject) {
-    return [{slug : program.subject}];
+    return [{slug : program.subject}]
   }
 
   // Search everything.
   else if (search && !program.subject) {
-    console.log('Searching', subjects.length, 'subjects', '\n');
-    return subjects;
+    console.log('Searching', subjects.length, 'subjects', '\n')
+    return subjects
   }
 
-}).then(subjects => {
-  classes.search({roster, subjects: subjects.map(s => s.slug), search})
-  .then(function (classes) {
-    return display_classlist(classes);
-  });
 })
+.then(subjects => classes.search({roster, subjects: subjects.map(s => s.slug), search}))
+.then(display_classlist)
 .catch(err => {
   console.log("Roster not available. 😞");
   console.log("Try running npm update -g cornell.");
@@ -175,13 +172,13 @@ function display_classlist (classes) {
       { type: 'autocomplete',
         message: 'Info for:',
         name: 'clss',
-        source: function(answers, input) {
-          var choices = Object.keys(display_list)
-            .filter(lib.filter_on(input));
+        source: (answers, input) => {
+          const choices = Object.keys(display_list)
+            .filter(lib.filter_on(input))
           return Promise.resolve(choices)
         }
       }])
-    .then(function(answers) {
+    .then(answers => {
       display_classinfo(display_list[answers.clss]);
     });
   }
