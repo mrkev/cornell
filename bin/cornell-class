@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
 'use strict';
-/* global require, Promise, process */ 
-var rp       = require('request-promise');
-var inquirer = require('inquirer');
-var program  = require('commander');
-var chalk    = require('chalk');
-var wrap     = require('word-wrap');
-var Promise  = require('es6-promise').Promise;
-var lib      = require('../lib/common');
-
+/* global require, Promise, process */
+const rp       = require('request-promise');
+const inquirer = require('inquirer');
+const program  = require('commander');
+const chalk    = require('chalk');
+const wrap     = require('word-wrap');
+const Promise  = require('es6-promise').Promise;
+const lib      = require('../lib/common');
+const classes  = require('../src/class')
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
 /////////////////////////////// Helper functions ///////////////////////////////
@@ -79,6 +79,8 @@ program
   })
   .parse(process.argv);
 
+/** Process / get all the query info we need */
+
 if (program.subject) program.subject = program.subject.toUpperCase();
 
 // Search term?
@@ -86,43 +88,17 @@ var search = program.args.join(' ');
 if (search) { search = '&q=' + search; }
 
 // Roster?
-var roster = (function () {
-  if (program.term) return program.term;
-  var now = new Date();
-  var season = (now.getMonth() > 5) ? 'FA' : 'SP';
+var roster = program.term || (_ => {
+  const now = new Date()
+  const season = (now.getMonth() > 5) ? 'FA' : 'SP';
   return season + (now.getFullYear() % 2000);
-})();
+})()
 
-var rosters = 
-  rp('https://classes.cornell.edu/api/2.0/config/rosters.json')
-  .then(function (body) {
-    // TODO Error handling.
-    return JSON.parse(body).data.rosters.map(function (rost) {
-      return {
-        slug  : rost.slug,
-        descr : rost.descr
-      };
-    });
-  });
+/** Get the data */
 
-var subjects = 
-  rp('https://classes.cornell.edu/api/2.0/config/subjects.json?roster=' + roster)
-  .then(function (body) {
-    // TODO Error handling.
-    return JSON.parse(body).data.subjects.map(function (subj) {
-      return {
-        slug : subj.value,
-        descr : subj.descr
-      };
-    });
-  });
+classes.subjects(roster).then(subjects => {
 
-
-Promise.all([rosters, subjects]).then(function (res) {
-  var rosters  = res[0];
-  var subjects = res[1];
-
-  // No search term or subject. The hell does 
+  // No search term or subject. The hell does
   // this user want? Offer a menu. 👌
   if (!search && !program.subject) {
     return inquirer
@@ -130,9 +106,9 @@ Promise.all([rosters, subjects]).then(function (res) {
       type: 'autocomplete',
       name: 'subject',
       message: 'What subject?',
-      source: function(answers, input) {
-        var choices = subjects
-          .map(function (x) {return x.slug + ' ' + x.descr;})
+      source: (answers, input) => {
+        const choices = subjects
+          .map(x => x.slug + ' ' + x.descr)
           .filter(lib.filter_on(input));
 
         return Promise.resolve(choices)
@@ -141,7 +117,7 @@ Promise.all([rosters, subjects]).then(function (res) {
       var sub_slug = answers.subject.split(' ')[0];
       return [{slug : sub_slug}];
     });
-  } 
+  }
 
   // We got a search term, and a subject. Yay! lol/
   else if (search && program.subject) {
@@ -160,11 +136,8 @@ Promise.all([rosters, subjects]).then(function (res) {
     return subjects;
   }
 
-}).then(function (subjects) {
-  var requests = subjects.map(function (subj) {
-    // console.log('https://classes.cornell.edu/api/2.0/search/classes.json?roster=FA14&subject=' + subj.slug + search);
-    return rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=' + roster + '&subject=' + subj.slug + search);
-  });
+}).then(subjects => {
+  const requests = subjects.map(subj => rp('https://classes.cornell.edu/api/2.0/search/classes.json?roster=' + roster + '&subject=' + subj.slug + search))
 
   Promise.all(requests)
     .then(function (bodies) {
@@ -182,7 +155,7 @@ Promise.all([rosters, subjects]).then(function (res) {
       return display_classlist(classes);
     });
 })
-.catch(function (err) {
+.catch(err => {
   console.log("Roster not available. 😞");
   console.log("Try running npm update -g cornell.");
   console.log("If that doesn't fix it, https://github.com/mrkev/cornell/issues")
@@ -233,9 +206,9 @@ function display_classlist (classes) {
 function display_classinfo (clss) {
   // console.log(clss)
 
-  var acgr = clss.acadGroup, 
-      accr = clss.acadCareer, 
-      brth = clss.catalogBreadth, 
+  var acgr = clss.acadGroup,
+      accr = clss.acadCareer,
+      brth = clss.catalogBreadth,
       dist = clss.catalogDistr,
       when = clss.catalogWhenOffered,
       fee  = clss.catalogFee;
@@ -245,7 +218,7 @@ function display_classinfo (clss) {
                 chalk.black(acgr, accr),
                 chalk.red(brth, dist),
                 when, chalk.green(fee), '\n');
-  
+
   var reqs = clss.catalogPrereqCoreq,
       fovr = clss.catalogForbiddenOverlaps,
       prms = clss.catalogPermission;
@@ -255,7 +228,7 @@ function display_classinfo (clss) {
 
   if (reqs)
     console.log(wrap('📶  ' + reqs, {width: 70}), '\n');
-  
+
   if (prms)
     console.log(wrap('🔓  ' + prms, {width: 70}), '\n');
 
