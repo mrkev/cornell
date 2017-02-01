@@ -41,7 +41,7 @@ function pretty (obj, symb, pre, post) {
 
 ///////////////////////////////// Definitions. /////////////////////////////////
 
-var formats = {
+const formats = {
   '%id'         : 'crseId',
   '%subj'       : 'subject',
   '%cnum'       : 'catalogNbr',
@@ -88,7 +88,7 @@ var search = program.args.join(' ');
 if (search) { search = '&q=' + search; }
 
 // Roster?
-var roster = program.term || (_ => {
+const roster = program.term || (_ => {
   const now = new Date()
   const season = (now.getMonth() > 5) ? 'FA' : 'SP';
   return season + (now.getFullYear() % 2000);

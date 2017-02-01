@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
-var rp         = require('request-promise');
-var inquirer   = require('inquirer');
-var program    = require('commander');
-var chalk      = require('chalk');
-var lib        = require('../lib/common');
-var hallname   = require('../lib/translations').hallname;
-var opener     = require("opener");
-                 require('sugar');
+const rp         = require('request-promise');
+const inquirer   = require('inquirer');
+const program    = require('commander');
+const chalk      = require('chalk');
+const lib        = require('../lib/common');
+const hallname   = require('../lib/translations').hallname;
+const opener     = require("opener");
+                   require('sugar');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -16,16 +16,16 @@ inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 
 /** Date -> 'YYYY-MM-DD' */
 function datestr (date) {
-  var local = new Date(date);
+  const local = new Date(date);
   local.setMinutes(date.getMinutes() - date.getTimezoneOffset());
   return local.toJSON().slice(0, 10);
 }
 
 /** String -> Obj -> 'a (obj[string]) */
-var get = function (p) { return function (x) { return x[p]; }; };
+const get = p => x => x[p]
 
 /** Day (op.Hours obj) {... date: String...} -> Day {... date: Date...} */
-var operating_hours_localize_date = function (day) {
+const operating_hours_localize_date = function (day) {
   if (day.date instanceof Date) return day;
   day.date = new Date(day.date); // UTC, convert to EST -> +5 hours. Timzone shift
   day.date.setTime(day.date.getTime() + (5*60*60*1000));
@@ -55,7 +55,7 @@ var get_hall = function (provided) {
       { type: 'autocomplete',
         message: 'Which hall?',
         name: 'hall',
-        source: function (answers, input) {
+        source: (answers, input) => {
           return Promise.resolve(provided.eateries
             .map(get('nameshort'))
             .filter(lib.filter_on(input)))
@@ -65,8 +65,8 @@ var get_hall = function (provided) {
 
   // Find the info for that hall
   .then(function (answers) {
-    var hall = hallname(answers.hall);
-    var es = provided.eateries.filter(function (e) { return e.nameshort === hall; });
+    const hall = hallname(answers.hall);
+    const es = provided.eateries.filter(e => e.nameshort === hall);
     if (es.length > 1) throw new Error('Repeated names?');
     if (es.length < 1) throw new Error('No hall found');
     else return es[0];
@@ -81,48 +81,44 @@ var get_hall = function (provided) {
 };
 
 
-
 /**
  * Resolves to an operatingHours object for a given day
  * @param  {Date}         we want the operating horus (day) for
  * @return {Object}       Operating hours object, (a day) + eatery.id
  *                        null if hall is closed for the day.
  */
-var get_day = function (date) { return function (eatery) {
+const get_day = date => eatery => {
 
   /** start of the day */
-  var win_start = new Date(date); win_start.setHours(0,0,0,0);
+  const win_start = new Date(date); win_start.setHours(0,0,0,0);
   /** end of the day */
-  var win_end = new Date(date);   win_end.setHours(23,59,59,999);
+  const win_end = new Date(date);   win_end.setHours(23,59,59,999);
 
   /** Leggo. */
   return Promise.resolve(eatery)
 
   .then(function (e) {
 
-    // console.log(e);
-
     var op_hours;
     try {
       op_hours = e.operatingHours.map(operating_hours_localize_date)
-      .filter(function (day) {
-        // console.log(day.date.getTime() >= win_start, day.date.getTime() < win_end);
+      .filter(day => {
         return day.date.getTime() >= win_start && day.date.getTime() < win_end;
       });
     }
 
-    catch (e) {console.trace(e);}
+    catch (e) { console.trace(e); }
 
     if (op_hours.length > 1) throw new Error();
     op_hours[0].id = eatery.id; // For record tracking.
-    
+
     return op_hours[0];
 
   })
 
   .catch(lib.error('Error processing date: ' + date));
 
-};};
+};
 
 /**
  * Prints menu for a day object (child of operatingHours)
@@ -136,17 +132,16 @@ var print_menu = function (day) { /* operatingHours object */
     console.log("Hall is closed ");
   }
 
-  var pr = day.events.map(function (event) {
+  var pr = day.events.map(event => {
     return '' +
     '\n' + chalk.underline.green(event.descr) + chalk.dim(' (' + event.start + ' - ' + event.end + ', ' + datestr(day.date) + ')') +
     '\n' + ((event.menu.length) < 1 ? 'Not available.' :
     event.menu.map(function (station) {
       return '' +
       chalk.red.bold(station.category) + '\n' +
-      station.items.map(function (option) {
-        return '' +
-        ((option.healthy) ? ' 🍎  ' : '  • ') + option.item; //+ ((option.healthy) ? ' 🍎' : '');
-      }).join('\n');
+      station.items.map(option =>
+        (option.healthy ? ' 🍎  ' : '  • ') + option.item
+      ).join('\n');
     }).join('\n'));
 
   }).join('\n');
@@ -155,24 +150,23 @@ var print_menu = function (day) { /* operatingHours object */
 };
 
 var print_time = function (e) {
-  var week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var times = "";
   try {
     times = e.operatingHours
-    .map(function (day) {
+    .map(day => {
       day.date_original_str = day.date;
       return day;
     })
     .map(operating_hours_localize_date)
     .map(function (day) {
-      var events = day.events
-        .map(function (event) {
-          return chalk.underline(event.descr) + ': ' + (event.start + ' - ' + event.end);
-        }).join('\n ▶ ');
+      const events = day.events.map(event =>
+        `${chalk.underline(event.descr)}: ${event.start} - ${event.end}`
+      ).join('\n ▶ ');
 
-      return "" + 
+      return "" +
         chalk.green(day.date_original_str + ": ") + chalk.dim(week[day.date.getDay()]) + '\n' +
-        ((events !== "") ? ' ▶ ' + events : ' ✘ Closed.');
+        ((events !== "") ? ` ▶ ${events}` : ' ✘ Closed.');
     }).join('\n\n');
 
   } catch (e) { console.trace(e); }
@@ -180,12 +174,10 @@ var print_time = function (e) {
 };
 
 /** @return null | url to given eatery */
-var get_map_url = function (e) {
-  return (e.latitude && e.longitude) ?
-      'https://www.openstreetmap.org/?mlat=' + e.latitude + '&mlon=' +
-       e.longitude + '#map=17/' + e.latitude +'/' + e.longitude
-    : null;
-};
+const get_map_url = e => (e.latitude && e.longitude)
+  ? `https://www.openstreetmap.org/?mlat=${e.latitude}&mlon=` +
+    `${e.longitude}#map=17/${e.latitude}/${e.longitude}`
+  : null
 
 /**
  * Prints information about an eatery.
@@ -193,19 +185,17 @@ var get_map_url = function (e) {
  * Object -> void
  */
 var print_info = function (what) { return function (e) {
-  var na            = chalk.dim('Not available.');
-  var label         = chalk.cyan.underline;
-  var url           = function (u) { return (!u) ? null : '\n ▶ ' + chalk.underline(u); };
-  var name          = e.name;
-  var about         = e.aboutshort;
-  var phone         = e.contactPhone        || na;
-  var email         = e.contactEmail        || na;
-  var online_order  = url(e.onlineOrderUrl) || na;
-  var map_url       = url(get_map_url(e))   || na;
-  var payment_types = '\n ✔ ' +
-    e.payMethods.map(function (method) {
-      return method.descr;
-    }).join('\n ✔ ');
+  let na            = chalk.dim('Not available.');
+  let label         = chalk.cyan.underline;
+  let url           = u => (!u) ? null : '\n ▶ ' + chalk.underline(u)
+  let name          = e.name;
+  let about         = e.aboutshort;
+  let phone         = e.contactPhone        || na;
+  let email         = e.contactEmail        || na;
+  let online_order  = url(e.onlineOrderUrl) || na;
+  let map_url       = url(get_map_url(e))   || na;
+  let payment_types = '\n ✔ ' +
+    e.payMethods.map(method => method.descr).join('\n ✔ ');
 
   online_order = (online_order);
   phone        = (phone);
@@ -216,28 +206,26 @@ var print_info = function (what) { return function (e) {
   var times;
   try {
     times = e.operatingHours.map(function (day) {
-      return day.date +
-        '\n - ' + day.events.map(function (event) {
-          return event.descr + ': ' + event.start + ' - ' + event.end;
-        }).join('\n - ');
+      return `${day.date}\n - ` + day.events.map(event =>
+        `${event.descr}: ${event.start} - ${event.end}`
+      ).join('\n - ');
     }).join('\n');
 
   } catch (e) { console.trace(e); }
 
-  var p = (what === 'INFO') ?
-          // '\n' + chalk.bold.blue(name) +
-                 about + '\n' +
-          '\n' + label('P:') + ' ' + phone + '  ' + label('E:') + ' ' + email +
-          '\n' + label('Online Ordering:') + ' ' + online_order +
-          '\n' + label('Location:') + ' ' + map_url +
-          '\n' + label('Accepts:') + ' ' + payment_types
+  const p = (what === 'INFO') ?
+      `${about}` +
+      `\n${label('P:')} ${phone}   ${label('E:')} ${email}` +
+      `\n${label('Online Ordering:')} ${online_order}` +
+      `\n${label('Location:')} ${map_url}` +
+      `\n${label('Accepts:')} ${payment_types}`
 
-        : (what === 'TIME') ? times
+    : (what === 'TIME') ? times
 
-        : (what === 'UNSP') ?
-          '\n' + 'TODO: UNSP PRINT FOR ☃' + name
+    : (what === 'UNSP') ?
+      '\n' + 'TODO: UNSP PRINT FOR ☃' + name
 
-        : null;
+    : null;
 
   if (p) console.log(p);
   else throw new Error('Unspecified print command');
@@ -266,15 +254,13 @@ var user_picked_closed = function (provided) {
   return Promise.all(eateries)
 
   // Get only the days for which we have events
-  .then(function (days) {
-    return days.filter(function (day) {
-      return (day.events.length > 0); 
-    });
+  .then(days => {
+    return days.filter(day => (day.events.length > 0))
   })
 
   // Get the hall IDs for those days with events.
   .then(function (filtered_days) {
-    return filtered_days.map(function (d) { return d.id; });
+    return filtered_days.map(d => d.id);
   })
 
   // Throw an error if the hall we want is not here.
@@ -287,17 +273,14 @@ var user_picked_closed = function (provided) {
 /** Returns only eateries with menus */
 var filter_menus = function (provided) {
   // Get today for all eateries
-  var eateries = provided.eateries.map(get_day(new Date()));
+  const eateries = provided.eateries.map(get_day(new Date()));
   return Promise.all(eateries)
 
   // Get only the days for which we have menus
-  .then(function (days) {
-    return days.filter(function (day) {
-      return (day.events) ? day.events.filter(function (event) {
-        return event.menu && event.menu.length > 0;
-      }).length > 0 : false;
-    });
-  })
+  .then(days => days.filter(day => (day.events)
+    ? day.events.filter(e => e.menu && e.menu.length > 0).length > 0
+    : false
+  ))
 
   // Get the hall IDs for those days with menus.
   .then(function (filtered_days) {
@@ -320,15 +303,13 @@ var filter_menus = function (provided) {
   .catch(lib.fatal('Error fetching which halls have menus.'));
 };
 
-var filter_maps = function (provided) {
+const filter_maps = provided => {
   return Promise.resolve(true)
 
-  // 
-  .then(function () {
-    return provided.eateries.filter(function (e) {
-      return !!get_map_url(e);
-    });
-  })
+  //
+  .then(_ =>
+    provided.eateries.filter(e => !!get_map_url(e))
+  )
 
   // Pass-through provided stuff
   .then(function (filtered_eateries) {
@@ -356,7 +337,7 @@ var filter_maps = function (provided) {
 // };
 
 /** If the user wants hall info */
-var get_info = function (eateries, uargs) {
+const get_info = (eateries, uargs) => {
   return Promise.resolve({
       eateries: eateries,
       hall: uargs[0] // Prob work something better here.
@@ -370,7 +351,7 @@ var get_info = function (eateries, uargs) {
 };
 
 /** If the user wants menu info */
-var get_menu = function (eateries, uargs) {
+const get_menu = (eateries, uargs) => {
   return Promise.resolve({
       eateries: eateries,
       hall: uargs[0] // Prob work something better here.
@@ -394,7 +375,7 @@ var get_menu = function (eateries, uargs) {
 };
 
 /** If the user want's time info */
-var get_time = function (eateries, uargs) {
+const get_time = (eateries, uargs) => {
   return Promise.resolve({
       eateries: eateries,
       hall: uargs[0] // Prob work something better here.
@@ -408,39 +389,37 @@ var get_time = function (eateries, uargs) {
 };
 
 /** If the user runs `conrell eat`, nothing else specified */
-var get_help = function (eateries, uargs) {
-  return Promise.resolve({
-      eateries: eateries,
-      hall: uargs[0] // Prob work something better here.
-    })
-    /** Point the user to available options */
-    .then(function () {
-      // next, if user provided a hall, show summary for that
-      // hall, with both menu and time
-      console.log("Run `cornell eat --help` for usage info.");
-    })
-    /** Woah, don't know what could've gone wrong here */
-    .catch(lib.fatal('Hmm, something is quite broken here.'));
-};
+const get_help = (eateries, uargs) => Promise
+  .resolve({
+    eateries: eateries,
+    hall: uargs[0] // Prob work something better here.
+  })
+  /** Point the user to available options */
+  .then(() => {
+    // next, if user provided a hall, show summary for that
+    // hall, with both menu and time
+    console.log("Run `cornell eat --help` for usage info.");
+  })
+  /** Woah, don't know what could've gone wrong here */
+  .catch(lib.fatal('Hmm, something is quite broken here.'));
 
-var get_mapa = function (eateries, uargs) {
-  return Promise.resolve({
-      eateries: eateries,
-      hall: uargs[0] // Prob work something better here.
-    })
-    /** Check if the user picked a valid hall */
-    .then(user_picked_valid)
-    .catch(lib.error("Couldn't find any hall named " + uargs[0] + ", sorry."))
-    /** todo, Only halls with maps. Also, did user pick right one? */
-    .then(filter_maps)
-    /** Get the user to pick a hall */
-    .then(get_hall)
-    /** Get the map URL */
-    .then(get_map_url)
-    .then(opener)
-    /** Woah, don't know what could've gone wrong here */
-    .catch(lib.fatal('Ah! An error opening the map, sorry 😞'));
-};
+const get_mapa = (eateries, uargs) => Promise
+  .resolve({
+    eateries: eateries,
+    hall: uargs[0] // Prob work something better here.
+  })
+  /** Check if the user picked a valid hall */
+  .then(user_picked_valid)
+  .catch(lib.error("Couldn't find any hall named " + uargs[0] + ", sorry."))
+  /** todo, Only halls with maps. Also, did user pick right one? */
+  .then(filter_maps)
+  /** Get the user to pick a hall */
+  .then(get_hall)
+  /** Get the map URL */
+  .then(get_map_url)
+  .then(opener)
+  /** Woah, don't know what could've gone wrong here */
+  .catch(lib.fatal('Ah! An error opening the map, sorry 😞'));
 
 
 /********************************** THE MAIN **********************************/
@@ -452,7 +431,7 @@ program
   .option ('-i, --info', 'Print general hall information')
   .option ('-w, --map',  'Open a map to a given hall')
   // .option ('-l, --list <format>', 'Print all halls with format')
-  .on('--help', function(){
+  .on('--help', _ => {
     console.log('  Examples:');
     console.log('');
     console.log('    $ cornell eat --menu');
@@ -477,15 +456,15 @@ rp('https://now.dining.cornell.edu/api/1.0/dining/eateries.json')
 .catch(lib.error('Could not reach the API.'))
 
 /** All good in the meta? Return the eatery array */
-.then(function (body) {
-  var obj = JSON.parse(body);
+.then(body => {
+  const obj = JSON.parse(body);
   if (obj.status != "success") throw new Error();
   return obj.data.eateries;
 })
 .catch(lib.fatal('Ah! An error fetching eateries 😞'))
 
 /** Do whatever the suer asked us to */
-.then(function (eateries) {
+.then(eateries => {
   switch (user_wants) {
     // case 'LIST': return get_list(eateries, program.list);
     case 'INFO': return get_info(eateries, user_args);
