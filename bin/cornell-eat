@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
-const rp         = require('request-promise');
 const inquirer   = require('inquirer');
 const program    = require('commander');
 const chalk      = require('chalk');
 const lib        = require('../lib/common');
 const hallname   = require('../lib/translations').hallname;
 const opener     = require("opener");
-                   require('sugar');
+const eat        = require('../src/eat');
+                   // require('sugar');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -337,56 +337,53 @@ const filter_maps = provided => {
 // };
 
 /** If the user wants hall info */
-const get_info = (eateries, uargs) => {
-  return Promise.resolve({
-      eateries: eateries,
-      hall: uargs[0] // Prob work something better here.
-    })
-    /** Get the user to pick a hall */
-    .then(get_hall)
-    /** Print info for the hall niceley */
-    .then(print_info('INFO'))
-    /** If all other catches don't catch I guess */
-    .catch(lib.fatal('Ah! An error processing the information 😞'));
-};
+const get_info = (eateries, uargs) => Promise
+  .resolve({
+    eateries: eateries,
+    hall: uargs[0] // Prob work something better here.
+  })
+  /** Get the user to pick a hall */
+  .then(get_hall)
+  /** Print info for the hall niceley */
+  .then(print_info('INFO'))
+  /** If all other catches don't catch I guess */
+  .catch(lib.fatal('Ah! An error processing the information 😞'));
 
 /** If the user wants menu info */
-const get_menu = (eateries, uargs) => {
-  return Promise.resolve({
-      eateries: eateries,
-      hall: uargs[0] // Prob work something better here.
-    })
-    /** Check if the user picked a valid hall */
-    .then(user_picked_valid)
-    .catch(lib.error("Couldn't find any hall named " + uargs[0] + ", sorry."))
-    /** Check if the user picked a closed hall */
-    .then(user_picked_closed)
-    .catch(lib.error("Hall is closed."))
-    /** Only halls with menus. Also, did user pick right one? */
-    .then(filter_menus)
-    /** Get the user to pick a hall */
-    .then(get_hall)
-    /** Menu for today. */
-    .then(get_day(new Date()))
-    /** Print info for the hall niceley */
-    .then(print_menu)
-    /** If all other catches don't catch I guess */
-    .catch(lib.fatal('Ah! An error processing the information 😞'));
-};
+const get_menu = (eateries, uargs) => Promise
+  .resolve({
+    eateries: eateries,
+    hall: uargs[0] // Prob work something better here.
+  })
+  /** Check if the user picked a valid hall */
+  .then(user_picked_valid)
+  .catch(lib.error("Couldn't find any hall named " + uargs[0] + ", sorry."))
+  /** Check if the user picked a closed hall */
+  .then(user_picked_closed)
+  .catch(lib.error("Hall is closed."))
+  /** Only halls with menus. Also, did user pick right one? */
+  .then(filter_menus)
+  /** Get the user to pick a hall */
+  .then(get_hall)
+  /** Menu for today. */
+  .then(get_day(new Date()))
+  /** Print info for the hall niceley */
+  .then(print_menu)
+  /** If all other catches don't catch I guess */
+  .catch(lib.fatal('Ah! An error processing the information 😞'));
 
 /** If the user want's time info */
-const get_time = (eateries, uargs) => {
-  return Promise.resolve({
-      eateries: eateries,
-      hall: uargs[0] // Prob work something better here.
-    })
-    /** Get the user to pick a hall */
-    .then(get_hall)
-    /** Print info for the hall niceley */
-    .then(print_time)
-    /** If all other catches don't catch I guess */
-    .catch(lib.fatal('Ah! An error processing the information 😞'));
-};
+const get_time = (eateries, uargs) => Promise
+  .resolve({
+    eateries: eateries,
+    hall: uargs[0] // Prob work something better here.
+  })
+  /** Get the user to pick a hall */
+  .then(get_hall)
+  /** Print info for the hall niceley */
+  .then(print_time)
+  /** If all other catches don't catch I guess */
+  .catch(lib.fatal('Ah! An error processing the information 😞'));
 
 /** If the user runs `conrell eat`, nothing else specified */
 const get_help = (eateries, uargs) => Promise
@@ -451,16 +448,7 @@ var user_wants = (program.list) ? 'LIST'
     user_args  = program.args;
 
 /** First, get the Eateries */
-rp('https://now.dining.cornell.edu/api/1.0/dining/eateries.json')
-
-.catch(lib.error('Could not reach the API.'))
-
-/** All good in the meta? Return the eatery array */
-.then(body => {
-  const obj = JSON.parse(body);
-  if (obj.status != "success") throw new Error();
-  return obj.data.eateries;
-})
+eat.endpoint()
 .catch(lib.fatal('Ah! An error fetching eateries 😞'))
 
 /** Do whatever the suer asked us to */

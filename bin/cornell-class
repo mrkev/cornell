@@ -7,7 +7,6 @@ const inquirer = require('inquirer');
 const program  = require('commander');
 const chalk    = require('chalk');
 const wrap     = require('word-wrap');
-const Promise  = require('es6-promise').Promise;
 const lib      = require('../lib/common');
 const classes  = require('../src/class')
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
@@ -85,7 +84,7 @@ if (program.subject) program.subject = program.subject.toUpperCase();
 
 // Search term?
 var search = program.args.join(' ');
-if (search) { search = '&q=' + search; }
+// if (search) { search = '&q=' + search; }
 
 // Roster?
 const roster = program.term || (_ => {

@@ -39,7 +39,7 @@ const search = query => Promise.resolve(query)
      query.subject = [query.subject]; return query
     }
   })
-  .then(query => query.subject.map(subject => rp(`https://classes.cornell.edu/api/2.0/search/classes.json?roster=${query.roster}&subject=${subject}` + query.search)))
+  .then(query => query.subject.map(subject => rp(`https://classes.cornell.edu/api/2.0/search/classes.json?roster=${query.roster}&subject=${subject}&q=${query.search}`)))
   .then(requests => Promise.all(requests))
   .then(bodies => bodies
     .map(body => JSON.parse(body).data.classes)
