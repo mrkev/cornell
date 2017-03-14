@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+'use strict';
+
+const program    = require('commander');
+const opener     = require("opener");
+const classes    = require('../src/class.js');
+const lib        = require('../lib/common');
+
+program
+  .usage  ('[class name]')
+  .parse(process.argv)
+
+const query = program.args.join(' ');
+
+classes.search({
+  search: query,
+  subject: 'CS'
+})
+.then(arr => {
+  //arr = arr.sort((a,b) => a.description.length - b.description.length)
+  if (arr.length < 1) {
+    throw new Error();
+  }
+  else if (arr.length > 1) {}
+  return Promise.resolve(`${arr[0].subject}${arr[0].catalogNbr}`.toLowerCase())
+    .then(course => `http://cs.cornell.edu/courses/${course}/`)
+    .then(opener)
+})
+.catch(lib.error('No class found'))
+
+
+// TODO: Errors. Add CMS
