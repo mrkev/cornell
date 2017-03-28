@@ -1,5 +1,5 @@
 const rp = require('request-promise')
-
+const lib = require('../lib/common')
 const rosters = _ =>
   rp('https://classes.cornell.edu/api/2.0/config/rosters.json')
   .then(body => JSON.parse(body).data.rosters.map(rost => ({
@@ -39,11 +39,12 @@ const search = query => Promise.resolve(query)
      query.subject = [query.subject]; return query
     }
   })
-  .then(query => query.subject.map(subject => rp(`https://classes.cornell.edu/api/2.0/search/classes.json?roster=${query.roster}&subject=${subject}&q=${query.search}`)))
+  .then(query => query.subject.map(subject => `https://classes.cornell.edu/api/2.0/search/classes.json?roster=${query.roster}&subject=${subject}&q=${query.search}`))
+  .then(urls => urls.map(url => rp(url).catch(e => null)))
   .then(requests => Promise.all(requests))
   .then(bodies => bodies
-    .map(body => JSON.parse(body).data.classes)
-    .filter(classes => classes.length > 0)
+    .map(body => body && JSON.parse(body).data.classes)
+    .filter(classes => classes && classes.length > 0)
     .reduce((acc, clss) => acc.concat(clss)))
 
 module.exports = {

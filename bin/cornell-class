@@ -66,7 +66,7 @@ const formats = {
 program
   .usage('[search query]')
   .option('-s, --subject [subject]', 'Limit search to subject')
-  .option('-t, --term [term]', 'Specify roster term')
+  .option('-t, --term [term]', 'Specify roster term (eg. SP16)')
   .option('-l, --list [format]', 'Print with format [%s]')
   .on('--help', function(){
     console.log('  Using --list:');
@@ -136,7 +136,9 @@ classes.subjects(roster).then(subjects => {
   }
 
 })
-.then(subjects => classes.search({roster, subjects: subjects.map(s => s.slug), search}))
+.then(subjects => subjects.map(s => s.slug))
+.then(subjects => ({roster, subjects, search}))
+.then(classes.search)
 .then(display_classlist)
 .catch(err => {
   console.log("Roster not available. 😞");
