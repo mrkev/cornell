@@ -20,14 +20,14 @@ inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
  * @param  {Object} format  Dictionary of {token: 'key'}
  * @return void
  */
-function display_class_with_format (clss, format) {
+const display_class_with_format = function (clss, format) {
   for (var key in formats) {
     format = format.replace(key, clss[formats[key]]);
   }
   console.log(format);
 }
 
-function pretty (obj, symb, pre, post) {
+const pretty = function (obj, symb, pre, post) {
   if (!symb) symb = ':';
   if (!pre) pre = '';
   if (!post) post = '';
@@ -67,6 +67,7 @@ program
   .usage('[search query]')
   .option('-s, --subject [subject]', 'Limit search to subject')
   .option('-t, --term [term]', 'Specify roster term (eg. SP16)')
+  .option('--next', 'Next roster')
   .option('-l, --list [format]', 'Print with format [%s]')
   .on('--help', function(){
     console.log('  Using --list:');
@@ -86,17 +87,26 @@ if (program.subject) program.subject = program.subject.toUpperCase();
 var search = program.args.join(' ');
 // if (search) { search = '&q=' + search; }
 
-// Roster?
+/** Term roster is set to FA/SP and the last two digits of the current year  */
 const roster = program.term || (_ => {
+              // Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+  const terms = ['SP','SP','SP','SP','FA','FA','FA','FA','FA','FA','SP','SP']
   const now = new Date()
-  const season = (now.getMonth() > 5) ? 'FA' : 'SP';
+  const season = terms[now.getMonth()];
   return season + (now.getFullYear() % 2000);
 })()
 
+const next_roster = (roster => {
+  const fall = roster.includes('FA')
+  return ['FA','SP'][+fall]+(parseInt(roster.substr(-2))+fall);
+})(roster)
+
+process.stdout.write((program.next)
+  ? `Term: ${roster}, use --next for ${next_roster} (see --help)\n`
+  : `Term: ${roster}. `)
+
 /** Get the data */
-
-classes.subjects(roster).then(subjects => {
-
+classes.subjects(program.next ? next_roster : roster).then(subjects => {
   // No search term or subject. The hell does
   // this user want? Offer a menu. 👌
   if (!search && !program.subject) {

@@ -1,3 +1,5 @@
+// @flow
+
 const rp = require('request-promise')
 const lib = require('../lib/common')
 const rosters = _ =>
@@ -45,7 +47,7 @@ const search = query => Promise.resolve(query)
   .then(bodies => bodies
     .map(body => body && JSON.parse(body).data.classes)
     .filter(classes => classes && classes.length > 0)
-    .reduce((acc, clss) => acc.concat(clss)))
+    .reduce((acc, clss) => acc.concat(clss), []))
 
 module.exports = {
   subjects,
