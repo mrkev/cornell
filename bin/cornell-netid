@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 'use strict';
 
-let program  = require('commander');
-let chalk    = require('chalk');
-let inquirer = require('inquirer');
-let lib      = require('../lib/common');
-let netid    = require('../src/netid');
+const program  = require('commander');
+const chalk    = require('chalk');
+const inquirer = require('inquirer');
+const lib      = require('../lib/common');
+const netid    = require('../src/netid');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
