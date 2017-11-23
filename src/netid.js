@@ -27,36 +27,44 @@ let extract_single_result = ($) => {
   return info;
 }
 
+const log = (x, i) => { console.log(x, i); return x}
+
 /** Takes DOM for a search results page, returns info object list */
 let extract_search_results = ($) => {
 
-  var res = []
-
+  const result = []
   $('.results').each(function (i, elem) {
 
-    let type = $(this).find('caption').text().replace(/\([0-9]+\)/, '');
+    const type = $(this).find('caption').text().replace(/\([0-9]+\)/, '');
     // each table: students, alumni, staff, etc
-    let info = $(this).find('tbody').text().replace(/(  )+/g, '')
-      .split('\n')
-      .filter(l => l !== '\r' && l !== ' \r' && l !== '')
-      .map(l => l.replace('\r', '').split(':'))
-      .reduce((acc, x) => {
-        if (x.length == 1) {
-          acc.unshift({});
-          acc[0].name = x[0];
-          acc[0].type = type;
-        }
-        else {
-          acc[0][x[0].toLowerCase()] = x[1].trim()
-        }
-        return acc;
-      }, []);
+    $(this).find('tbody').children().each(function (i, elem) {
+      // each row is a person
+      const collected = []
+      $(this).children(function (i) {
+        const p = $(this).html()
+          // replace all tags with newlines (.text() doesn't preserve <br\>)
+          .replace(/<(?:.|\n)*?>/gm, '\n')
+          .split('\n').map(x => x.trim())
+          .filter(Boolean).join('\n')
 
-    res = res.concat(info)
+        // first is always the name
+        if (i === 0) {
+          return collected.push({name: p})
+        }
+
+        // then we have key: value pairs
+        const m = p.match(/(.*):\n(.*)/gm);
+        if (!m) { return }
+
+        const r = m.forEach(x => {
+          const [key, value] = x.split(':\n')
+          collected.push({[key.toLowerCase()]: value})
+        })
+      })
+      result.push(collected.reduce((a, b) => Object.assign(a, b), {}))
+    })
   });
-
-  return res;
-
+  return result;
 }
 
 module.exports = {

@@ -1,29 +1,29 @@
 #!/usr/bin/env node
 'use strict';
 
-const program  = require('commander');
-const chalk    = require('chalk');
+const program = require('commander');
+const chalk = require('chalk');
 const inquirer = require('inquirer');
-const lib      = require('../lib/common');
-const netid    = require('../src/netid');
+const lib = require('../lib/common');
+const netid = require('../src/netid');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
 program
-  .usage  ('<option> [query string]')
+  .usage('<option> [query string]')
   // .option('-l, --list [format]', 'Print with format [%s]')
-  .on('--help', function(){
+  .on('--help', function () {
     console.log('  Examples:');
     console.log('');
     console.log('    $ cornell netid Ajay');
     console.log('');
     console.log('    $ cornell netid keh222');
     console.log('');
-  })  .parse(process.argv);
+  }).parse(process.argv);
 
-let query   = program.args.join("+");
+let query = program.args.join('+');
 
-if (!query) return console.log("Run `cornell netid --help` for usage info.")
+if (!query) return console.log('Run `cornell netid --help` for usage info.');
 
 netid.search(query)
 
@@ -35,29 +35,27 @@ netid.search(query)
  */
 
 // Filterning
-.then((res) => {
-
+  .then((res) => {
   // We don't need to filter
-  if (res.length < 2 || program.N || program.M) return res;
+    if (res.length < 2 || program.N || program.M) return res;
 
-  // We want to filter. Filter.
-  let max_name = res.reduce((acc, x) => x.name.length > acc ? x.name.length : acc, 0)
+    // We want to filter. Filter.
+    let max_name = res.reduce((acc, x) => x.name.length > acc ? x.name.length : acc, 0);
 
-  return inquirer.prompt([{
-    type: 'autocomplete',
-    name: 'student',
-    message: 'Several matches',
-    source: (answersSoFar, input) => Promise.resolve(
-      res.map(x => x.name + ' '.repeat(max_name - x.name.length) + ' | ' + (x.netid || x.cwid))
-         .filter(lib.filter_on(input))),
-  }])
-  .then(ans => {
-    let id = ans.student.split('|')[1].trim()
-  // could netids and cwids conflct => this filter.len == 2 ?
-    return [res.filter(s => s.netid === id || s.cwid === id )[0]]
-  });
-})
-
+    return inquirer.prompt([{
+      type: 'autocomplete',
+      name: 'student',
+      message: 'Several matches',
+      source: (answersSoFar, input) => Promise.resolve(
+        res.map(x => x.name + ' '.repeat(max_name - x.name.length) + ' | ' + (x.netid || x.cwid))
+          .filter(lib.filter_on(input)))
+    }])
+      .then(ans => {
+        let id = ans.student.split('|')[1].trim();
+        // could netids and cwids conflct => this filter.len == 2 ?
+        return [res.filter(s => s.netid === id || s.cwid === id)[0]];
+      });
+  })
 
 /*
 [ { name: 'Seunghee S. Ha',
@@ -70,20 +68,19 @@ netid.search(query)
 // .then(s => s.map(x => program.N ? x.netid :
 //                       program.M ? x.name  : x).filter(x => x).join('\n'))  // cwid's will be undefined
 
-.then(s => {
-  if (s.length === 0) return console.log('nothing...');
-  if (program.N) console.log(print_prop('netid')(s))
-  if (program.M) console.log(print_prop('name')(s))
+  .then(s => {
+    if (s.length === 0) return console.log('nothing...');
+    if (program.N) console.log(print_prop('netid')(s));
+    if (program.M) console.log(print_prop('name')(s));
 
-  s.map(print_info)
-})
+    s.map(print_info);
+  })
 
-.catch(console.error)
-
+  .catch(console.error);
 
 let print_prop = (prop) => (s) => console.log(s.map(x => x[prop]).join('\n'));
 
 let print_info = i => {
   if (!i) return console.log('nothing...');
-  Object.keys(i).forEach(k => console.log(chalk.green(k + ": ") + i[k]));
-}
+  Object.keys(i).forEach(k => console.log(chalk.green(k + ': ') + i[k]));
+};
