@@ -173,12 +173,6 @@ var print_time = function (e) {
   console.log(times);
 };
 
-/** @return null | url to given eatery */
-const get_map_url = e => (e.latitude && e.longitude)
-  ? `https://www.openstreetmap.org/?mlat=${e.latitude}&mlon=` +
-    `${e.longitude}#map=17/${e.latitude}/${e.longitude}`
-  : null
-
 /**
  * Prints information about an eatery.
  * @param  {Eatery} e to print
@@ -193,7 +187,7 @@ var print_info = function (what) { return function (e) {
   let phone         = e.contactPhone        || na;
   let email         = e.contactEmail        || na;
   let online_order  = url(e.onlineOrderUrl) || na;
-  let map_url       = url(get_map_url(e))   || na;
+  let map_url       = url(lib.get_map_url(e))   || na;
   let payment_types = '\n ✔ ' +
     e.payMethods.map(method => method.descr).join('\n ✔ ');
 
@@ -308,7 +302,7 @@ const filter_maps = provided => {
 
   //
   .then(_ =>
-    provided.eateries.filter(e => !!get_map_url(e))
+    provided.eateries.filter(e => !!lib.get_map_url(e))
   )
 
   // Pass-through provided stuff
@@ -413,7 +407,7 @@ const get_mapa = (eateries, uargs) => Promise
   /** Get the user to pick a hall */
   .then(get_hall)
   /** Get the map URL */
-  .then(get_map_url)
+  .then(lib.get_map_url)
   .then(opener)
   /** Woah, don't know what could've gone wrong here */
   .catch(lib.fatal('Ah! An error opening the map, sorry 😞'));

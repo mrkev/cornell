@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+'use strict';
+
+const rp      = require('request-promise');
+const program = require('commander');
+const opener  = require("opener");
+const { get_map_url, log, filter_on } = require('../lib/common')
+const { labs } = require('../src/labs')
+const inquirer = require('inquirer');
+
+inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+
+program
+  .option('-r, --resource [term]', 'Search for a specific resource')
+  .on('--help', _ => {
+    console.log('');
+    console.log('  Examples:');
+    console.log('');
+    console.log('    cornell labs -r mac      # Find labs with macs');
+    console.log('    cornell labs             # Browse labs');
+
+    console.log('');
+
+  })
+  .parse(process.argv);
+
+// TODO: Find labs with a specific resource
+// TODO: Find labs nearby another lab
+
+const prompt_lab = labs =>
+  inquirer.prompt([{
+    type: 'autocomplete',
+    name: 'lab',
+    message: 'Lab:',
+    source: (answersSoFar, input) =>
+      Promise
+        .resolve(labs.map(x => x.name).filter(filter_on(input)))
+
+  }]).then(ans => {
+    const name = ans.lab
+    return labs.filter(s => s.name === name)[0];
+  })
+
+const prompt_action = lab =>
+  inquirer.prompt([{
+    type: 'list',
+    name: 'action',
+    message: `${lab.name} (${lab.location}):`,
+    choices: [
+      'Resources',
+      'Map',
+    ]
+  }])
+    .then(({action}) => ({ action, lab }))
+
+const print_resources = ({ resources }) =>
+  resources.map(r => ` - ${r}`).forEach(x => console.log(x))
+
+const execute_action = ({ lab, action }) =>
+    action === 'Map' ? opener(get_map_url(lab.coordinates)) :
+    action === 'Resources' ? print_resources(lab) :
+    console.log(action)
+
+labs()
+  .then(prompt_lab)
+  .then(prompt_action)
+  .then(execute_action)
