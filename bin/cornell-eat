@@ -333,7 +333,7 @@ const filter_maps = provided => {
 /** If the user wants hall info */
 const get_info = (eateries, uargs) => Promise
   .resolve({
-    eateries: eateries,
+    eateries,
     hall: uargs[0] // Prob work something better here.
   })
   /** Get the user to pick a hall */
@@ -382,14 +382,14 @@ const get_time = (eateries, uargs) => Promise
 /** If the user runs `conrell eat`, nothing else specified */
 const get_help = (eateries, uargs) => Promise
   .resolve({
-    eateries: eateries,
+    eateries,
     hall: uargs[0] // Prob work something better here.
   })
   /** Point the user to available options */
   .then(() => {
-    // next, if user provided a hall, show summary for that
+    // todo, if user provided a hall, show summary for that
     // hall, with both menu and time
-    console.log("Run `cornell eat --help` for usage info.");
+    print_help()
   })
   /** Woah, don't know what could've gone wrong here */
   .catch(lib.fatal('Hmm, something is quite broken here.'));
@@ -412,6 +412,17 @@ const get_mapa = (eateries, uargs) => Promise
   /** Woah, don't know what could've gone wrong here */
   .catch(lib.fatal('Ah! An error opening the map, sorry 😞'));
 
+const print_help = () => {
+  console.log('  Examples:');
+  console.log('');
+  console.log('    $ cornell eat --menu');
+  console.log('      - Lists open halls. Select one for menus.');
+  console.log('    $ cornell eat -m rpcc');
+  console.log('      - Lists today\'s menus for rpcc.');
+  console.log('    $ cornell eat -t okies');
+  console.log('      - Lists a few days of Okenshields open hours.');
+  console.log('');
+}
 
 /********************************** THE MAIN **********************************/
 
@@ -422,15 +433,7 @@ program
   .option ('-i, --info', 'Print general hall information')
   .option ('-w, --map',  'Open a map to a given hall')
   // .option ('-l, --list <format>', 'Print all halls with format')
-  .on('--help', _ => {
-    console.log('  Examples:');
-    console.log('');
-    console.log('    $ cornell eat --menu');
-    console.log('      - Lists open halls. Select one for menus.');
-    console.log('    $ cornell eat -t okies');
-    console.log('      - Lists a few days of Okenshields open hours.');
-    console.log('');
-  })
+  .on('--help', print_help)
   .parse(process.argv);
 
 var user_wants = (program.list) ? 'LIST'
@@ -461,7 +464,7 @@ eat.endpoint()
 
 /*********************************** NOTES. ***********************************/
 
-// next, --online   opens online ordering
-// next, --list     list's following pattern, much like in `cornell class`
+// todo, --online   opens online ordering
+// todo, --list     list's following pattern, much like in `cornell class`
 
 
