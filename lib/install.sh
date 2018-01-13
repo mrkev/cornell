@@ -21,15 +21,15 @@ if ! (is_executable npm && is_executable node); then
       curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.32.0/install.sh | bash && \
       echo 'Installing latest iojs...'                        && \
       . ~/.bash_profile                                       && \
-      nvm install v6                                          && \
-      nvm alias default v6                                    && \
+      nvm install v8                                          && \
+      nvm alias default v8                                    && \
       echo 'Installing cornell...'                            && \
       npm install -g cornell                                  && \
       echo ""                                                 && \
       echo "All done! Restart your terminal and your're set!" && \
       echo ""
       exit 1
-    ;; 
+    ;;
   esac
 
   # Haven't tested nvm on Linux, so just install node using a package manarger
