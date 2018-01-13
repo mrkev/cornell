@@ -7,6 +7,9 @@
     "cornell": "./bin/cornell",
     "cslink": "./bin/cslink"
   },
+  "scripts": {
+    "lint": "npx eslint ."
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mrkev/cornell.git"
@@ -37,5 +40,13 @@
     "tabletojson": "^0.6.0",
     "update-notifier": "^2.3.0",
     "word-wrap": "^1.2.3"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "eslint": "^4.15.0",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.5.1"
   }
 }
