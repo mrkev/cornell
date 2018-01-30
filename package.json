@@ -31,7 +31,7 @@
     "commander": "^2.13.0",
     "csv-parse": "^2.0.0",
     "custom-human-time": "^1.0.3",
-    "inquirer": "^5.0.0",
+    "inquirer": "^5.0.1",
     "inquirer-autocomplete-prompt": "^0.12.1",
     "opener": "^1.4.3",
     "plant.js": "0.0.0",
@@ -43,10 +43,10 @@
   },
   "devDependencies": {
     "babel-eslint": "^8.2.1",
-    "eslint": "^4.15.0",
+    "eslint": "^4.16.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-react": "^7.5.1"
+    "eslint-plugin-react": "^7.6.1"
   }
 }
