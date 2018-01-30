@@ -193,8 +193,6 @@ function display_classlist (classes) {
       display_classinfo(display_list[answers.clss]);
     });
   }
-
-
 }
 
 

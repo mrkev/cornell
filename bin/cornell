@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const program = require('commander');
-const lib     = require('../lib/common');
+const lib = require('../lib/common');
 
 lib.notifyUpdate();
 lib.notifyVersion();

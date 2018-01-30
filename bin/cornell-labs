@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
-const rp      = require('request-promise');
+const rp = require('request-promise');
 const program = require('commander');
-const opener  = require("opener");
+const opener = require('opener');
+const inquirer = require('inquirer');
 const { get_map_url, log, filter_on } = require('../lib/common')
 const { labs } = require('../src/labs')
-const inquirer = require('inquirer');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -18,9 +18,7 @@ program
     console.log('');
     console.log('    cornell labs -r mac      # Find labs with macs');
     console.log('    cornell labs             # Browse labs');
-
     console.log('');
-
   })
   .parse(process.argv);
 
