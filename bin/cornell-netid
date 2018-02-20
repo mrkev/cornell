@@ -9,21 +9,23 @@ const netid = require('../src/netid');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
+const print_help = () => {
+  console.log('  Examples:');
+  console.log('');
+  console.log('    $ cornell netid Ajay');
+  console.log('    $ cornell netid keh222');
+  console.log('');
+}
+
 program
   .usage('<option> [query string]')
   // .option('-l, --list [format]', 'Print with format [%s]')
-  .on('--help', function () {
-    console.log('  Examples:');
-    console.log('');
-    console.log('    $ cornell netid Ajay');
-    console.log('');
-    console.log('    $ cornell netid keh222');
-    console.log('');
-  }).parse(process.argv);
+  .on('--help', print_help)
+  .parse(process.argv);
 
 let query = program.args.join('+');
 
-if (!query) return console.log('Run `cornell netid --help` for usage info.');
+if (!query) return print_help()
 
 netid.search(query)
 
