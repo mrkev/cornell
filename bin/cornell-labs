@@ -5,8 +5,16 @@ const rp = require('request-promise');
 const program = require('commander');
 const opener = require('opener');
 const inquirer = require('inquirer');
-const { get_map_url, log, filter_on } = require('../lib/common')
+const {
+  get_map_url,
+  log,
+  filter_on,
+  underline_on,
+  merge_with_id,
+} = require('../lib/common')
 const { labs } = require('../src/labs')
+const chalk = require('chalk')
+const stripAnsi = require('strip-ansi');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -25,28 +33,58 @@ program
 // TODO: Find labs with a specific resource
 // TODO: Find labs nearby another lab
 
+const filter_lab = (query, labs) => {
+  // Labs that have "query" in their name
+  const in_name = labs.filter(({ name }) => filter_on(query)(name))
+  // Labs that have "query" in their resource list
+  const in_resources = labs.filter(({ resources }) => {
+    const queried_resources = resources.filter(filter_on(query))
+    return !!queried_resources.length
+  })
+
+  // merges both of them
+  const merged = merge_with_id(in_name, in_resources, ({ id }) => id)
+
+  // get labels
+  const labels = merged.map(({ name, resources }) => {
+    // if lab has a resource that matches the query, show it in the label
+    const queried_resources = resources.filter(filter_on(query))
+    const show_has = query && query.length && queried_resources.length
+    const sorted_resources = // so that "R" shows up first
+      queried_resources.sort((a, b) => a.length - b.length)
+    const print_resources =
+      queried_resources.slice(0, 1).join(', ') +
+      (queried_resources.slice(1).length ? ', ...' : '')
+    return `${name}${show_has ? ` (has: ${print_resources})` : ''}`
+  })
+  .map(underline_on(query))
+
+  return labels
+}
+
+/** Asks user to select a lab */
 const prompt_lab = labs =>
   inquirer.prompt([{
     type: 'autocomplete',
     name: 'lab',
-    message: 'Lab:',
+    message: 'Search:',
     source: (answersSoFar, input) =>
-      Promise
-        .resolve(labs.map(x => x.name).filter(filter_on(input)))
+      Promise.resolve(filter_lab(input, labs))
 
   }]).then(ans => {
-    const name = ans.lab
+    const name = stripAnsi(ans.lab.replace(/ \(has: .*\)/i, ''))
     return labs.filter(s => s.name === name)[0];
   })
 
+/** Asks user to select an action on a lab */
 const prompt_action = lab =>
   inquirer.prompt([{
     type: 'list',
     name: 'action',
     message: `${lab.name} (${lab.location}):`,
     choices: [
-      'Resources',
       'Map',
+      'Resources',
     ]
   }])
     .then(({action}) => ({ action, lab }))

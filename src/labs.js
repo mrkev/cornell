@@ -6,6 +6,7 @@ const parse_coords = str => {
   return { latitude, longitude };
 };
 
+// @return array of labs
 const labs = () =>
   request('https://mapping.cit.cornell.edu/publiclabs/map/results_as_csv.cfm')
     .then(csv => new Promise((res, rej) => {
@@ -22,6 +23,6 @@ const labs = () =>
         })));
       });
     })
-    );
+  );
 
 module.exports = { labs };
