@@ -39,7 +39,6 @@
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "strip-ansi": "^4.0.0",
-    "tabletojson": "^0.6.0",
     "update-notifier": "^2.3.0",
     "word-wrap": "^1.2.3"
   },
