@@ -1,4 +1,4 @@
-# Cornell CLI [![Dependencies](https://david-dm.org/mrkev/cornell.png)](https://david-dm.org/mrkev/cornell#info=dependencies)
+# Cornell CLI [![dependencies Status](https://david-dm.org/mrkev/cornell/status.svg)](https://david-dm.org/mrkev/cornell) [![npm version](https://badge.fury.io/js/cornell.svg)](https://badge.fury.io/js/cornell)
 
 ![gif 🙌](https://github.com/mrkev/cornell/raw/gh-pages/images/usage.gif)
 
