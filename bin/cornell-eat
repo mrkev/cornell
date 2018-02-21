@@ -8,7 +8,6 @@ const lib        = require('../lib/common');
 const hallname   = require('../lib/translations').hallname;
 const opener     = require("opener");
 const eat        = require('../src/eat');
-                   // require('sugar');
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
 
@@ -64,7 +63,7 @@ var get_hall = function (provided) {
     )
 
   // Find the info for that hall
-  .then(function (answers) {
+  .then(answers => {
     const hall = hallname(answers.hall);
     const es = provided.eateries.filter(e => e.nameshort === hall);
     if (es.length > 1) throw new Error('Repeated names?');
@@ -92,12 +91,12 @@ const get_day = date => eatery => {
   /** start of the day */
   const win_start = new Date(date); win_start.setHours(0,0,0,0);
   /** end of the day */
-  const win_end = new Date(date);   win_end.setHours(23,59,59,999);
+  const win_end = new Date(date); win_end.setHours(23,59,59,999);
 
   /** Leggo. */
   return Promise.resolve(eatery)
 
-  .then(function (e) {
+  .then(e => {
 
     var op_hours;
     try {
@@ -149,25 +148,25 @@ var print_menu = function (day) { /* operatingHours object */
   console.log(pr);
 };
 
-var print_time = function (e) {
+const print_time = e => {
   const week = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   var times = "";
   try {
     times = e.operatingHours
-    .map(day => {
-      day.date_original_str = day.date;
-      return day;
-    })
-    .map(operating_hours_localize_date)
-    .map(function (day) {
-      const events = day.events.map(event =>
-        `${chalk.underline(event.descr)}: ${event.start} - ${event.end}`
-      ).join('\n ▶ ');
+      .map(day => {
+        day.date_original_str = day.date;
+        return day;
+      })
+      .map(operating_hours_localize_date)
+      .map(function (day) {
+        const events = day.events.map(event =>
+          `${chalk.underline(event.descr)}: ${event.start} - ${event.end}`
+        ).join('\n ▶ ');
 
-      return "" +
-        chalk.green(day.date_original_str + ": ") + chalk.dim(week[day.date.getDay()]) + '\n' +
-        ((events !== "") ? ` ▶ ${events}` : ' ✘ Closed.');
-    }).join('\n\n');
+        return "" +
+          chalk.green(day.date_original_str + ": ") + chalk.dim(week[day.date.getDay()]) + '\n' +
+          ((events !== "") ? ` ▶ ${events}` : ' ✘ Closed.');
+      }).join('\n\n');
 
   } catch (e) { console.trace(e); }
   console.log(times);
@@ -227,7 +226,7 @@ var print_info = function (what) { return function (e) {
 };};
 
 /** @throws if hall not found */
-var user_picked_valid = function (provided) {
+const user_picked_valid = (provided) => {
   // AY: Check if no provided => undefined
   if (!provided.hall) return provided;
   if (!hallname(provided.hall)) throw new Error('Hall not found.');
@@ -235,11 +234,11 @@ var user_picked_valid = function (provided) {
 };
 
 /** @throws if hall is closed. Assumes provided.hall*/
-var user_picked_closed = function (provided) {
+const user_picked_closed = (provided) => {
   if (!provided.hall) return provided;
   if (!hallname(provided.hall)) throw new Error('Hall not found.');
 
-  var want_id  = provided.eateries.filter(function (day) {
+  var want_id = provided.eateries.filter(day => {
     return (day.nameshort === hallname(provided.hall));
   })
   .assert_length(1)[0].id;
@@ -265,7 +264,7 @@ var user_picked_closed = function (provided) {
 };
 
 /** Returns only eateries with menus */
-var filter_menus = function (provided) {
+const filter_menus = (provided) => {
   // Get today for all eateries
   const eateries = provided.eateries.map(get_day(new Date()));
   return Promise.all(eateries)
@@ -277,42 +276,29 @@ var filter_menus = function (provided) {
   ))
 
   // Get the hall IDs for those days with menus.
-  .then(function (filtered_days) {
-    return filtered_days.map(function (d) { return d.id; });
-  })
+  .then(filtered_days => filtered_days.map(d => d.id))
 
   // Rebuild our eateries from these ids.
-  .then(function (ids) {
-    return provided.eateries.filter(function (e) {
-      return ids.indexOf(e.id) > -1;
-    });
-  })
+  .then(ids => provided.eateries.filter(e => ids.indexOf(e.id) > -1))
 
-  // Pass-through provided stuff
-  .then(function (filtered_eateries) {
-    provided.eateries = filtered_eateries;
-    return provided;
-  })
+  // Pass-through provided stuff (albeit with freshly filtered eateries)
+  .then(eateries => Object.assign(provided, { eateries }))
 
+  // Do something with errors
   .catch(lib.fatal('Error fetching which halls have menus.'));
 };
 
 const filter_maps = provided => {
   return Promise.resolve(true)
 
-  //
-  .then(_ =>
-    provided.eateries.filter(e => !!lib.get_map_url(e))
-  )
+  // The ones with maps
+  .then(_ => provided.eateries.filter(e => !!lib.get_map_url(e)))
 
-  // Pass-through provided stuff
-  .then(function (filtered_eateries) {
-    provided.eateries = filtered_eateries;
-    return provided;
-  })
+  // Pass-through provided stuff (albeit with freshly filtered eateries)
+  .then(eateries => Object.assign(provided, { eateries }))
 
+  // Do something with errors
   .catch(lib.fatal('Error filtering which halls have maps.'));
-
 };
 
 
