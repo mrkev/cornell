@@ -28,26 +28,25 @@
   "homepage": "https://github.com/mrkev/cornell",
   "dependencies": {
     "@types/strip-ansi": "^3.0.0",
-    "chalk": "^2.3.0",
-    "commander": "^2.13.0",
-    "csv-parse": "^2.0.0",
+    "chalk": "^2.4.1",
+    "commander": "^2.19.0",
+    "csv-parse": "^4.0.1",
     "custom-human-time": "^1.0.3",
-    "inquirer": "^5.0.1",
-    "inquirer-autocomplete-prompt": "^0.12.1",
-    "opener": "^1.4.3",
+    "inquirer": "^6.2.0",
+    "inquirer-autocomplete-prompt": "^1.0.1",
+    "opener": "^1.5.1",
     "plant.js": "0.0.0",
-    "request": "^2.83.0",
+    "request": "^2.88.0",
     "request-promise": "^4.2.2",
-    "strip-ansi": "^4.0.0",
-    "update-notifier": "^2.3.0",
+    "strip-ansi": "^5.0.0",
+    "update-notifier": "^2.5.0",
     "word-wrap": "^1.2.3"
   },
   "devDependencies": {
-    "babel-eslint": "^8.2.1",
-    "eslint": "^4.16.0",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3",
-    "eslint-plugin-react": "^7.6.1"
+    "eslint": "^5.9.0",
+    "eslint-config-airbnb": "^17.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.2",
+    "eslint-plugin-react": "^7.11.1"
   }
 }
