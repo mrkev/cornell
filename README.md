@@ -1,4 +1,4 @@
-# Cornell CLI [![dependencies Status](https://david-dm.org/mrkev/cornell/status.svg)](https://david-dm.org/mrkev/cornell) [![npm version](https://badge.fury.io/js/cornell.svg)](https://badge.fury.io/js/cornell) ![npm downloads](https://img.shields.io/npm/dt/localeval.svg)
+# Cornell CLI [![dependencies Status](https://david-dm.org/mrkev/cornell/status.svg)](https://david-dm.org/mrkev/cornell) [![npm version](https://badge.fury.io/js/cornell.svg)](https://badge.fury.io/js/cornell) ![npm downloads](https://img.shields.io/npm/dt/cornell.svg)
 
 ![gif 🙌](https://github.com/mrkev/cornell/raw/gh-pages/images/usage.gif)
 
