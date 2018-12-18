@@ -30,9 +30,9 @@
     "@types/strip-ansi": "^3.0.0",
     "chalk": "^2.4.1",
     "commander": "^2.19.0",
-    "csv-parse": "^4.0.1",
+    "csv-parse": "^4.2.0",
     "custom-human-time": "^1.0.3",
-    "inquirer": "^6.2.0",
+    "inquirer": "^6.2.1",
     "inquirer-autocomplete-prompt": "^1.0.1",
     "opener": "^1.5.1",
     "plant.js": "0.0.0",
@@ -43,7 +43,7 @@
     "word-wrap": "^1.2.3"
   },
   "devDependencies": {
-    "eslint": "^5.9.0",
+    "eslint": "^5.10.0",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-jsx-a11y": "^6.1.2",
