@@ -1,6 +1,6 @@
 {
   "name": "cornell",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "CLI for Cornell University",
   "main": "src/index.js",
   "bin": {
