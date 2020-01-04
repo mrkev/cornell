@@ -7,7 +7,10 @@ const inquirer = require('inquirer');
 const lib = require('../lib/common');
 const netid = require('../src/netid');
 
-inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'));
+inquirer.registerPrompt(
+  'autocomplete',
+  require('inquirer-autocomplete-prompt')
+);
 
 const print_help = () => {
   console.log('  Examples:');
@@ -15,7 +18,7 @@ const print_help = () => {
   console.log('    $ cornell netid Ajay');
   console.log('    $ cornell netid keh222');
   console.log('');
-}
+};
 
 program
   .usage('<option> [query string]')
@@ -25,33 +28,49 @@ program
 
 let query = program.args.join('+');
 
-if (!query) return print_help()
+if (!query) return print_help();
 
-netid.search(query)
+netid
+  .search(query)
 
-/*
+  /*
 [ { name: 'Seunghee S. Ha',
     type: 'Alumni ',
     email: 'ssh17@cornell.edu',
     netid: 'ssh17' }, ... ]
  */
 
-// Filterning
-  .then((res) => {
-  // We don't need to filter
+  // Filterning
+  .then(res => {
+    // We don't need to filter
     if (res.length < 2 || program.N || program.M) return res;
 
     // We want to filter. Filter.
-    let max_name = res.reduce((acc, x) => x.name.length > acc ? x.name.length : acc, 0);
+    let max_name = res.reduce(
+      (acc, x) => (x.name.length > acc ? x.name.length : acc),
+      0
+    );
 
-    return inquirer.prompt([{
-      type: 'autocomplete',
-      name: 'student',
-      message: 'Several matches',
-      source: (answersSoFar, input) => Promise.resolve(
-        res.map(x => x.name + ' '.repeat(max_name - x.name.length) + ' | ' + (x.netid || x.cwid))
-          .filter(lib.filter_on(input)))
-    }])
+    return inquirer
+      .prompt([
+        {
+          type: 'autocomplete',
+          name: 'student',
+          message: 'Several matches',
+          source: (answersSoFar, input) =>
+            Promise.resolve(
+              res
+                .map(
+                  x =>
+                    x.name +
+                    ' '.repeat(max_name - x.name.length) +
+                    ' | ' +
+                    (x.netid || x.cwid)
+                )
+                .filter(lib.filter_on(input))
+            ),
+        },
+      ])
       .then(ans => {
         let id = ans.student.split('|')[1].trim();
         // could netids and cwids conflct => this filter.len == 2 ?
@@ -59,16 +78,16 @@ netid.search(query)
       });
   })
 
-/*
+  /*
 [ { name: 'Seunghee S. Ha',
     type: 'Alumni ',
     email: 'ssh17@cornell.edu',
     netid: 'ssh17' }, ... ]
  */
 
-// Print
-// .then(s => s.map(x => program.N ? x.netid :
-//                       program.M ? x.name  : x).filter(x => x).join('\n'))  // cwid's will be undefined
+  // Print
+  // .then(s => s.map(x => program.N ? x.netid :
+  //                       program.M ? x.name  : x).filter(x => x).join('\n'))  // cwid's will be undefined
 
   .then(s => {
     if (s.length === 0) return console.log('nothing...');
@@ -80,7 +99,7 @@ netid.search(query)
 
   .catch(console.error);
 
-let print_prop = (prop) => (s) => console.log(s.map(x => x[prop]).join('\n'));
+let print_prop = prop => s => console.log(s.map(x => x[prop]).join('\n'));
 
 let print_info = i => {
   if (!i) return console.log('nothing...');

@@ -8,10 +8,10 @@ lib.notifyVersion();
 
 program
   .command('class [search]', 'search for class info')
-  .command('eat [hall]',     'display menus for hall')
-  .command('netid [search]', 'get people\'s netid or name')
+  .command('eat -m [hall]', 'display menus for hall')
+  .command('netid [search]', "get people's netid or name")
   .command('labs', 'show information about CIT labs')
   .on('--help', _ => {
     console.log('');
-  })
+  });
 program.parse(process.argv);
