@@ -1,15 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <title>./cornell by mrkev</title>
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/github-light.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" href="stylesheets/styles.css" />
+    <link rel="stylesheet" href="stylesheets/github-light.css" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
     <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
   </head>
   <body>
@@ -18,100 +21,189 @@
         <h1>./cornell</h1>
         <p>4 OP l33t h4xx0rz</p>
 
-        <p class="view"><a href="https://github.com/mrkev/cornell">View the Project on GitHub <small>mrkev/cornell</small></a></p>
-        
+        <p class="view">
+          <a href="https://github.com/mrkev/cornell"
+            >View the Project on GitHub <small>mrkev/cornell</small></a
+          >
+        </p>
 
-
-<!--         <ul>
+        <!--         <ul>
           <li><a href="https://github.com/mrkev/cornell/zipball/master">Download <strong>ZIP File</strong></a></li>
           <li><a href="https://github.com/mrkev/cornell/tarball/master">Download <strong>TAR Ball</strong></a></li>
           <li><a href="https://github.com/mrkev/cornell">View On <strong>GitHub</strong></a></li>
         </ul> -->
       </header>
       <section>
-        <p><img src="https://github.com/mrkev/cornell/raw/gh-pages/images/usage.gif" alt="some gif of how to use the thing so people know."></p>
+        <p>
+          <img
+            src="https://github.com/mrkev/cornell/raw/gh-pages/images/usage.gif"
+            alt="some gif of how to use the thing so people know."
+          />
+        </p>
         <p><small></small></p>
 
-<h3>
-<a id="install" class="anchor" href="#install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Install</h3>
+        <h3>
+          <a id="install" class="anchor" href="#install" aria-hidden="true"
+            ><span class="octicon octicon-link"></span></a
+          >Install
+        </h3>
 
-<p>If you have node.js but it's older than v8.0.0</p>
+        <p>If you have node.js but it's older than v8.0.0</p>
 
-<pre><code>brew upgrade node; nvm install v8; nvm alias default 8; echo 'one of these should work'</code></pre>
-        
-<p>If you have node.js (>= v8.0.0): </p>
+        <pre><code>brew upgrade node; nvm install v8; nvm alias default 8; echo 'one of these should work'</code></pre>
 
-<pre><code>npm install -g cornell
+        <p>If you have node.js (>= v8.0.0):</p>
+
+        <pre><code>npm install -g cornell
 </code></pre>
 
-<p>If you dont have node.js at all: <small style="font-size:6px;">*scrub*</small></p>
+        <p>
+          If you dont have node.js at all:
+          <small style="font-size:6px;">*scrub*</small>
+        </p>
 
-<ol>
-  <li>Get <a href="https://encrypted.google.com/search?hl=en&q=install%20nodejs">node.js</a></li>
-  <li>-<pre>npm install -g cornell</pre></li>
-</ol>
+        <ol>
+          <li>
+            Get
+            <a
+              href="https://encrypted.google.com/search?hl=en&q=install%20nodejs"
+              >node.js</a
+            >
+          </li>
+          <li>
+            -
+            <pre>npm install -g cornell</pre>
+          </li>
+        </ol>
 
-<b>OR</b>
+        <b>OR</b>
 
-<ol>
-  <li>Read this <a href="https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh">install script</a> and make sure you trust it.</li>
-  <li>-<pre><code>curl https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh | bash</code></pre></li>
-</ol>
+        <ol>
+          <li>
+            Read this
+            <a
+              href="https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh"
+              >install script</a
+            >
+            and make sure you trust it.
+          </li>
+          <li>
+            -
+            <pre><code>curl https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh | bash</code></pre>
+          </li>
+        </ol>
 
+        <h3>
+          <a id="usage" class="anchor" href="#usage" aria-hidden="true"
+            ><span class="octicon octicon-link"></span></a
+          >Usage
+        </h3>
 
+        <ul>
+          <li><code>cornell --help</code> - Always a good idea</li>
+          <li>
+            <code>cornell eat --menu</code> - Lists open halls. Select one for
+            menus.
+          </li>
+          <li>
+            <code>cornell eat --time okies</code> - Lists a few days of
+            Okenshields open hours.
+          </li>
+          <li>
+            <code>cornell class mexico</code> - Search roster for classes
+            containing "mexico".
+          </li>
+          <li>
+            <code>cornell class -s CS compilers</code> - Search CS classes
+            containing compilers.
+          </li>
+          <li>
+            <code>cornell class -s CS -l "%subj%cnum %when" | grep spring</code>
+            - All CS classes offered now, and also in the spring.
+          </li>
+          <li>
+            <code>cornell netid Ajay </code> - Find someone on the cornell
+            directory.
+          </li>
+        </ul>
+        <h3>
+          <a
+            id="wait-but-why"
+            class="anchor"
+            href="#wait-but-why"
+            aria-hidden="true"
+            ><span class="octicon octicon-link"></span></a
+          >Wait but why.
+        </h3>
 
+        <ol>
+          <li>
+            <p>
+              You already have browser 42 tabs open and don't want to kill those
+              page-tables just to find a place to eat.
+            </p>
+          </li>
+          <li>
+            <p>You're in <code>bash</code> all day anyways ¯\_(ツ)_/¯</p>
+          </li>
+          <li>
+            <p>
+              You want to <code>tmux</code> and <code>cron</code> and
+              <code>grep</code> for dayz.
+            </p>
+          </li>
+          <li>
+            <p>
+              You know that back in the 80s life was good. The grass was green,
+              UIs didn't suck, America was great and kids weren't whining about
+              their scrolling animations or their OTA software updates.
+            </p>
+          </li>
+          <li><p>To up your vintage game, duh.</p></li>
+        </ol>
 
-<h3>
-<a id="usage" class="anchor" href="#usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Usage</h3>
+        <h2>
+          <a
+            id="any-more-questions"
+            class="anchor"
+            href="#any-more-questions"
+            aria-hidden="true"
+            ><span class="octicon octicon-link"></span></a
+          >Any more questions?
+        </h2>
 
-<ul>
-<li>
-<code>cornell --help</code> - Always a good idea </li>
-<li>
-<code>cornell eat --menu</code> - Lists open halls. Select one for menus.</li>
-<li>
-<code>cornell eat --time okies</code> - Lists a few days of Okenshields open hours.</li>
-<li>
-<code>cornell class mexico</code> - Search roster for classes containing "mexico".</li>
-<li>
-<code>cornell class -s CS compilers</code> - Search CS classes containing compilers.</li>
-<li>
-<code>cornell class -s CS -l "%subj%cnum %when" | grep spring</code> - All CS classes offered now, and also in the spring.</li>
-<li>
-<code>cornell netid Ajay </code> - Find someone on the cornell directory.</li>
-</ul>
-<h3>
-<a id="wait-but-why" class="anchor" href="#wait-but-why" aria-hidden="true"><span class="octicon octicon-link"></span></a>Wait but why.</h3>
-
-<ol>
-<li><p>You already have browser 42 tabs open and don't want to kill those page-tables just to find a place to eat.</p></li>
-<li><p>You're in <code>bash</code> all day anyways ¯\_(ツ)_/¯</p></li>
-<li><p>You want to <code>tmux</code> and <code>cron</code> and <code>grep</code> for dayz.</p></li>
-<li><p>You know that back in the 80s life was good. The grass was green, UIs didn't suck, America was great and kids weren't whining about their scrolling animations or their OTA software updates.</p></li>
-<li><p>To up your vintage game, duh.</p></li>
-</ol>
-
-<h2>
-<a id="any-more-questions" class="anchor" href="#any-more-questions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Any more questions?</h2>
-
-<p><a href="http://shotonoca.ml/ask">Ask me about it</a></p>
+        <p><a href="http://shotonoca.ml/ask">Ask me about it</a></p>
       </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/mrkev">mrkev</a></p>
-        <p><small>Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <p>
+          This project is maintained by
+          <a href="https://github.com/mrkev">mrkev</a>
+        </p>
+        <p>
+          <small
+            >Theme by
+            <a href="https://github.com/orderedlist">orderedlist</a></small
+          >
+        </p>
       </footer>
     </div>
     <script src="javascripts/scale.fix.js"></script>
-              <script type="text/javascript">
-            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-          </script>
-          <script type="text/javascript">
-            try {
-              var pageTracker = _gat._getTracker("UA-65532412-1");
-            pageTracker._trackPageview();
-            } catch(err) {}
-          </script>
-
+    <script type="text/javascript">
+      var gaJsHost =
+        "https:" == document.location.protocol ? "https://ssl." : "http://www.";
+      document.write(
+        unescape(
+          "%3Cscript src='" +
+            gaJsHost +
+            "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"
+        )
+      );
+    </script>
+    <script type="text/javascript">
+      try {
+        var pageTracker = _gat._getTracker("UA-65532412-1");
+        pageTracker._trackPageview();
+      } catch (err) {}
+    </script>
   </body>
 </html>
