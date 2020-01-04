@@ -45,50 +45,47 @@
         <h3>
           <a id="install" class="anchor" href="#install" aria-hidden="true"
             ><span class="octicon octicon-link"></span></a
-          >Install
+          >Getting Started
         </h3>
-
-        <p>If you have node.js but it's older than v8.0.0</p>
-
-        <pre><code>brew upgrade node; nvm install v8; nvm alias default 8; echo 'one of these should work'</code></pre>
-
-        <p>If you have node.js (>= v8.0.0):</p>
-
-        <pre><code>npm install -g cornell
-</code></pre>
-
-        <p>
-          If you dont have node.js at all:
-          <small style="font-size:6px;">*scrub*</small>
-        </p>
 
         <ol>
           <li>
-            Get
-            <a
-              href="https://encrypted.google.com/search?hl=en&q=install%20nodejs"
-              >node.js</a
-            >
+            <p>
+              This CLI requires Node.js 8 or later. You can see what version of
+              node you're running by executing:
+            </p>
+            <pre>node --version</pre>
           </li>
           <li>
-            -
-            <pre>npm install -g cornell</pre>
+            <p>
+              If you don't have Node, or it's not version 8 or later, get the
+              latest version with
+              <a href="https://brew.sh/">Homebrew</a> (MacOS),
+              <a href="https://github.com/nvm-sh/nvm">nvm</a> (MacOS, Linux) or
+              directly from their
+              <a href="https://nodejs.org/en/download/">website</a> (all
+              platforms).
+            </p>
+          </li>
+          <li>
+            <p>Once you have Node 8 or above, install it with:</p>
+            <pre><code>npm install -g cornell</code></pre>
           </li>
         </ol>
 
-        <b>OR</b>
+        <h4 style="color:gray;">ALTERNATIVELY</h4>
 
         <ol>
           <li>
-            Read this
-            <a
-              href="https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh"
-              >install script</a
-            >
-            and make sure you trust it.
-          </li>
-          <li>
-            -
+            <p>
+              I put together this
+              <a
+                href="https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh"
+                >install script</a
+              >
+              a while back. It shold get you all set up. Run it from your
+              terminal:
+            </p>
             <pre><code>curl https://raw.githubusercontent.com/mrkev/cornell/master/lib/install.sh | bash</code></pre>
           </li>
         </ol>
@@ -133,13 +130,13 @@
             href="#wait-but-why"
             aria-hidden="true"
             ><span class="octicon octicon-link"></span></a
-          >Wait but why.
+          >Wait but why
         </h3>
 
         <ol>
           <li>
             <p>
-              You already have browser 42 tabs open and don't want to kill those
+              You already have 42 tabs open and don't want to kill those
               page-tables just to find a place to eat.
             </p>
           </li>
@@ -152,13 +149,15 @@
               <code>grep</code> for dayz.
             </p>
           </li>
-          <li>
+          <!-- Lmao "America was great" did this not age well? -->
+          <!-- 
+            <li>
             <p>
               You know that back in the 80s life was good. The grass was green,
               UIs didn't suck, America was great and kids weren't whining about
               their scrolling animations or their OTA software updates.
             </p>
-          </li>
+          </li> -->
           <li><p>To up your vintage game, duh.</p></li>
         </ol>
 
@@ -172,7 +171,7 @@
           >Any more questions?
         </h2>
 
-        <p><a href="http://shotonoca.ml/ask">Ask me about it</a></p>
+        <p><a href="http://twitter.com/aykev">Ask me about it</a></p>
       </section>
       <footer>
         <p>
