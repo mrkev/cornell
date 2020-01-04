@@ -53,7 +53,7 @@ rules:
   function-paren-newline: 'off'
   generator-star-spacing: error
   getter-return: error
-  global-require: error
+  global-require: 'off'
   guard-for-in: 'off'
   handle-callback-err: error
   id-blacklist: error
@@ -144,7 +144,7 @@ rules:
   no-path-concat: error
   no-plusplus: error
   no-process-env: error
-  no-process-exit: error
+  no-process-exit: 'off'
   no-proto: error
   no-prototype-builtins: error
   no-restricted-globals: error
