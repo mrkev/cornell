@@ -39,7 +39,7 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "strip-ansi": "^6.0.0",
-    "update-notifier": "^3.0.1",
+    "update-notifier": "^6.0.2",
     "word-wrap": "^1.2.3"
   },
   "devDependencies": {
